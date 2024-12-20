@@ -368,6 +368,7 @@ Treatment/Progression...........................................................
 						<font fontName="TH SarabunPSK" size="14"/>
 					</textElement>
 				<text><![CDATA[แผนการรักษา/ติดตาม]]></text>
+				
 				</staticText>
 				<staticText>
 					<reportElement
