@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="Clinical Summary"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="595"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="visit_id" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[select 
+prefix1.patient_prefix_description || ' ' || per2.person_firstname ||' '|| per2.person_lastname ||' ว.'||b1.employee_number as doc_name,
+b1.employee_number as num,
+t_visit.visit_hn as HN,
+t_visit.visit_an as AN,
+t_visit.visit_vn as VN,
+site_full_name as hospital,
+'เลขที่' || ' ' ||site_house || '  ' || 'หมู่.' ||site_moo || '  ' || 'ต.' || f5.address_description || '  ' || 'อ.' || f6.address_description || '  ' || 'จ.' || f7.address_description as provice,
+f_patient_prefix.patient_prefix_description || ' ' || t_patient.patient_firstname || '  ' || t_patient.patient_lastname AS patient_name
+,CASE WHEN t_patient.patient_birthday <> '' THEN substring(age(to_date((to_number(substring(t_visit.visit_begin_visit_time, 1, 4), '9999') - 543) || substring(t_visit.visit_begin_visit_time, 5, 6), 'YYYY-MM-DD'),to_date((to_number(substring(t_patient.patient_birthday, 1, 4), '9999') - 543) || substring(t_patient.patient_birthday, 5, 6), 'YYYY-MM-DD'))::text, '([0-9]+) year')ELSE '' END AS ปี ,
+
+CASE WHEN t_patient.patient_birthday IS NOT NULL THEN substring(' ' ||age(to_date(((to_number(substring(t_visit.visit_begin_visit_time, 1, 4), '9999')::int -543) || substring(t_visit.visit_begin_visit_time, 5, 6)), 'YYYY-MM-DD'), to_date(((to_number(substring(t_patient.patient_birthday, 1, 4), '9999')::int -543) || substring(t_patient.patient_birthday, 5, 6)), 'YYYY-MM-DD')) from '(...)mon') ELSE ' ' END as เดือน,
+
+CASE WHEN t_patient.patient_birthday IS NOT NULL THEN substring(' ' ||age(to_date(((to_number(substring(t_visit.visit_begin_visit_time, 1, 4), '9999')::int -543) || substring(t_visit.visit_begin_visit_time, 5, 6)), 'YYYY-MM-DD'), to_date(((to_number(substring(t_patient.patient_birthday, 1, 4), '9999')::int -543) || substring(t_patient.patient_birthday, 5, 6)), 'YYYY-MM-DD')) from '(...)day') ELSE ' ' END as วัน,
+
+t_visit.visit_patient_age as patient_age,
+'เลขที่' || ' ' ||patient_house || '  ' || 'หมู่.' ||patient_moo || '  ' || 'ต.' || f1.address_description || '  ' || 'อ.' || f2.address_description || '  ' || 'จ.' || f3.address_description as address,
+t_patient.patient_pid as pid,
+t_visit.visit_dx as dx,
+substring(t_visit.visit_begin_visit_time,1,10) as datevisit,
+
+substr(t_visit.visit_begin_admit_date_time,9,2)||'/'||substr(t_visit.visit_begin_admit_date_time,6,2)||'/'||substr(t_visit.visit_begin_admit_date_time,1,4) AS admission_date2,
+substr(t_visit.visit_begin_admit_date_time,12,19) AS admission_time,
+
+-- Use NULLIF() to handle empty string for integer type
+case when NULLIF(t_visit.visit_ipd_discharge_date_time, '') IS NULL then '' else to_char(to_date(t_visit.visit_ipd_discharge_date_time,'YYYY-MM-DD'),'DD/MM/YYYY') end as discharge_date2,
+substr(t_visit.visit_ipd_discharge_date_time,12,19) AS discharge_time,
+
+case when (((NULLIF(substr(t_visit.visit_ipd_discharge_date_time,1,4), '')::int-543||'-'||NULLIF(substr(t_visit.visit_ipd_discharge_date_time,6,5), ''))::date - (NULLIF(substr(t_visit.visit_begin_admit_date_time,1,4), '')::int-543||'-'||NULLIF(substr(t_visit.visit_begin_admit_date_time,6,5), ''))::date)<=0) then 1 
+else ((NULLIF(substr(t_visit.visit_ipd_discharge_date_time,1,4), '')::int-543||'-'||NULLIF(substr(t_visit.visit_ipd_discharge_date_time,6,5), ''))::date - (NULLIF(substr(t_visit.visit_begin_admit_date_time,1,4), '')::int-543||'-'||NULLIF(substr(t_visit.visit_begin_admit_date_time,6,5), ''))::date) end as จำนวนวันนอน,
+
+case when q1.name_order IS NOT NULL then q1.name_order else '-' end as ชื่อยา,
+case when q2.name_appointment IS NOT NULL then q2.name_appointment else '-' end as name_order,
+case when q2.appointment_date2 IS NOT NULL then q2.appointment_date2 else '-' end as appointment_date2,
+case when q2.appointment_time IS NOT NULL then q2.appointment_time else '-' end as appointment_time,
+case when q2.appointment_notice IS NOT NULL then q2.appointment_notice else '-' end as appointment_notice  
+
+from t_patient 
+inner JOIN t_visit ON t_patient.t_patient_id = t_visit.t_patient_id
+left join (
+    select
+        t_order.t_visit_id as visit_id,
+        case when t_order_drug.order_drug_special_prescription_text IS NOT NULL then t_order.order_common_name || ' ' || REGEXP_REPLACE(t_order_drug.order_drug_special_prescription_text, '[\r\n]+', ' ', 'g') else t_order.order_common_name || ' ' || t_order_drug.order_drug_dose || ' ' || b_item_drug_uom.item_drug_uom_description || ' x ' || b_item_drug_frequency.item_drug_frequency_number || ' จำนวน ' || t_order.order_qty || ' ' || drug_uom.item_drug_uom_description end as name_order
+    from t_visit
+    left join t_order on t_visit.t_visit_id = t_order.t_visit_id
+    left join t_order_drug on t_order.t_order_id = t_order_drug.t_order_id 
+    left join b_item_drug_uom on t_order_drug.b_item_drug_uom_id_use = b_item_drug_uom.b_item_drug_uom_id
+    left join b_item_drug_uom as drug_uom on t_order_drug.b_item_drug_uom_id_purch = drug_uom.b_item_drug_uom_id
+    left join b_item_drug_frequency on t_order_drug.b_item_drug_frequency_id = b_item_drug_frequency.b_item_drug_frequency_id
+    where t_order.f_order_status_id <> '3' and t_order.order_home = '1' and t_order_drug.order_drug_active = '1'
+    group by t_order.t_visit_id, t_order.order_common_name, t_order_drug.order_drug_dose, b_item_drug_uom.item_drug_uom_description, b_item_drug_frequency.item_drug_frequency_number, t_order.order_qty, drug_uom.item_drug_uom_description, t_order_drug.order_drug_special_prescription_text
+) as q1 on t_visit.t_visit_id = q1.visit_id
+
+left join (
+    select
+        t_patient_appointment.visit_id_make_appointment as appointment_id,
+        array_to_string(array_agg(DISTINCT t_patient_appointment_order.patient_appointment_order_common_name), ' , ') as name_appointment,
+        array_to_string(array_agg(DISTINCT substr(t_patient_appointment.patient_appointment_date,9,2)||'\'||substr(t_patient_appointment.patient_appointment_date,6,2)||'\'||substr(t_patient_appointment.patient_appointment_date,1,4)), ' | ') AS appointment_date2,
+        array_to_string(array_agg(DISTINCT substr(t_patient_appointment.patient_appointment_time,1,5)), ' | ') AS appointment_time,
+        array_to_string(array_agg(DISTINCT t_patient_appointment.patient_appointment ||''|| t_patient_appointment.patient_appointment_notice), '  |  ') as appointment_notice  
+    from t_patient_appointment
+    left join t_patient_appointment_order on t_patient_appointment.t_patient_appointment_id = t_patient_appointment_order.t_patient_appointment_id
+    where patient_appointment_active = '1'
+    group by t_patient_appointment.visit_id_make_appointment
+) as q2 on t_visit.t_visit_id = q2.appointment_id
+
+left join f_patient_prefix on t_patient.f_patient_prefix_id = f_patient_prefix.f_patient_prefix_id
+left join f_address as f1 on t_patient.patient_tambon = f1.f_address_id
+left join f_address as f2 on t_patient.patient_amphur = f2.f_address_id
+left join f_address as f3 on t_patient.patient_changwat = f3.f_address_id  
+left join t_visit_service on t_visit.t_visit_id = t_visit_service.t_visit_id
+left join t_diag_icd10 on (t_diag_icd10.diag_icd10_vn = t_visit.t_visit_id and t_diag_icd10.f_diag_icd10_type_id ='1' and t_diag_icd10.diag_icd10_active ='1')
+left join b_employee on t_diag_icd10.diag_icd10_staff_doctor = b_employee.b_employee_id
+left join t_person as per1 on (per1.t_person_id = b_employee.t_person_id and per1.active = '1')
+left join b_service_point on b_employee.b_service_point_id = b_service_point.b_service_point_id
+left join b_employee as b1 on t_visit.visit_patient_self_doctor = b1.b_employee_id
+left join t_person as per2 on (per2.t_person_id = b1.t_person_id and per2.active = '1')
+left join f_patient_prefix as prefix1 on per2.f_prefix_id = prefix1.f_patient_prefix_id
+, b_site 
+left join f_address as f5 on b_site.site_tambon = f5.f_address_id
+left join f_address as f6 on b_site.site_amphur = f6.f_address_id
+left join f_address as f7 on b_site.site_changwat = f7.f_address_id
+
+where 
+-- t_visit.t_visit_id = '255112209963517776'
+t_visit.t_visit_id =$P{visit_id}
+group by 
+prefix1.patient_prefix_description, per2.person_firstname, per2.person_lastname, b1.employee_number, t_visit.visit_hn, t_visit.visit_an, t_visit.visit_vn, b_site.site_full_name, b_site.site_house, b_site.site_moo, f5.address_description, f6.address_description, f7.address_description, f_patient_prefix.patient_prefix_description, t_patient.patient_firstname, t_patient.patient_lastname, t_patient.patient_birthday, t_visit.visit_begin_visit_time, t_visit.visit_patient_age, t_patient.patient_house, t_patient.patient_moo, f1.address_description, f2.address_description, f3.address_description, t_patient.patient_pid, t_visit.visit_dx, t_visit.visit_begin_admit_date_time, t_visit.visit_ipd_discharge_date_time, q1.name_order, q2.name_appointment, q2.appointment_date2, q2.appointment_time, q2.appointment_notice;]]></queryString>
+
+	<field name="doc_name" class="java.lang.String"/>
+	<field name="num" class="java.lang.String"/>
+	<field name="hn" class="java.lang.String"/>
+	<field name="an" class="java.lang.String"/>
+	<field name="vn" class="java.lang.String"/>
+	<field name="hospital" class="java.lang.String"/>
+	<field name="provice" class="java.lang.String"/>
+	<field name="patient_name" class="java.lang.String"/>
+	<field name="ปี" class="java.lang.String"/>
+	<field name="เดือน" class="java.lang.String"/>
+	<field name="วัน" class="java.lang.String"/>
+	<field name="patient_age" class="java.lang.String"/>
+	<field name="address" class="java.lang.String"/>
+	<field name="pid" class="java.lang.String"/>
+	<field name="dx" class="java.lang.String"/>
+	<field name="datevisit" class="java.lang.String"/>
+	<field name="admission_date2" class="java.lang.String"/>
+	<field name="admission_time" class="java.lang.String"/>
+	<field name="discharge_date2" class="java.lang.String"/>
+	<field name="discharge_time" class="java.lang.String"/>
+	<field name="จำนวนวันนอน" class="java.lang.Integer"/>
+	<field name="ชื่อยา" class="java.lang.String"/>
+	<field name="name_order" class="java.lang.String"/>
+	<field name="appointment_date2" class="java.lang.String"/>
+	<field name="appointment_time" class="java.lang.String"/>
+	<field name="appointment_notice" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="252"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="46"
+						y="24"
+						width="500"
+						height="19"
+						key="staticText-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[Clinical Summary  Maewong Hospital
+]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="46"
+						y="49"
+						width="500"
+						height="19"
+						key="staticText-2"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" size="16"/>
+					</textElement>
+				<text><![CDATA[ชื่อ-นามสกุล...................................................... อายุ........................................ HN....................... AN........................
+]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="46"
+						y="69"
+						width="500"
+						height="182"
+						key="staticText-3"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" size="14"/>
+					</textElement>
+				<text><![CDATA[Admission date ............................................. Discharge date............................................ Length of stay.....................days
+สาเหตุ/ปัญหาแรกรับ...................................................................................................................................................................................
+Final diagnosis   1).......................................................................................  4)......................................................................................
+                       2)........................................................................................ 5)......................................................................................
+                       3)........................................................................................ 6)......................................................................................
+Investigation      ......................................................................................................................................................................................
+                       .......................................................................................................................................................................................
+                       .......................................................................................................................................................................................
+Treatment/Progression...........................................................................................................................................................................
+                       .......................................................................................................................................................................................
+                       .......................................................................................................................................................................................
+]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="109"
+						y="47"
+						width="157"
+						height="21"
+						key="textField-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" size="16"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{patient_name}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="386"
+						y="47"
+						width="75"
+						height="23"
+						key="textField-2"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" size="16"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{hn}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="463"
+						y="47"
+						width="75"
+						height="23"
+						key="textField-3"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" size="16"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{vn}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="126"
+						y="66"
+						width="75"
+						height="23"
+						key="textField-4"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" size="16"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{admission_date2}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" pattern="" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						mode="Transparent"
+						x="264"
+						y="47"
+						width="108"
+						height="20"
+						forecolor="#000000"
+						backcolor="#FFFFFF"
+						key="textField-5"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#FFFFFF" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left" verticalAlignment="Top" rotation="None" lineSpacing="Single">
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false" isItalic="false" isUnderline="false" isPdfEmbedded ="false" pdfEncoding ="CP1252" isStrikeThrough="false" />
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{ปี}+" ปี " +$F{เดือน}+"เดือน " +$F{วัน}+"วัน"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="309"
+						y="66"
+						width="75"
+						height="23"
+						key="textField-6"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" size="16"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{discharge_date2}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="461"
+						y="67"
+						width="33"
+						height="23"
+						key="textField-7"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" size="16"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.Integer"><![CDATA[$F{จำนวนวันนอน}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="46"
+						y="236"
+						width="72"
+						height="16"
+						key="staticText-4"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" size="14"/>
+					</textElement>
+				<text><![CDATA[H.M.]]></text>
+				</staticText>
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="14"  isSplitAllowed="true" >
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="79"
+						y="-7"
+						width="513"
+						height="21"
+						key="textField-8"
+						isPrintWhenDetailOverflows="true"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["-  "+$F{ชื่อยา}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="215"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="48"
+						y="8"
+						width="500"
+						height="18"
+						key="staticText-5"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" size="14"/>
+					</textElement>
+				<text><![CDATA[ผลการรักษา         (   ) Improved     (   ) Not Improve     (   ) Other..............................................................................................]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="47"
+						y="25"
+						width="87"
+						height="92"
+						key="staticText-6"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" size="14"/>
+					</textElement>
+				<text><![CDATA[แผนการรักษา/ติดตาม]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="134"
+						y="30"
+						width="413"
+						height="18"
+						key="staticText-7"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" size="14"/>
+					</textElement>
+				<text><![CDATA[...............................................................................................................................................................................]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="134"
+						y="46"
+						width="413"
+						height="18"
+						key="staticText-8"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" size="14"/>
+					</textElement>
+				<text><![CDATA[...............................................................................................................................................................................]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="134"
+						y="62"
+						width="413"
+						height="18"
+						key="staticText-9"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" size="14"/>
+					</textElement>
+				<text><![CDATA[...............................................................................................................................................................................]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="134"
+						y="78"
+						width="413"
+						height="18"
+						key="staticText-10"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" size="14"/>
+					</textElement>
+				<text><![CDATA[...............................................................................................................................................................................]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="134"
+						y="28"
+						width="458"
+						height="89"
+						key="textField-9"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" size="14"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["วันที่นัด "+$F{appointment_date2}+"  รายละเอียดการนัด "+$F{appointment_notice}+"  รายการLAB  "+$F{name_order}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="134"
+						y="94"
+						width="413"
+						height="18"
+						key="staticText-11"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" size="14"/>
+					</textElement>
+				<text><![CDATA[...............................................................................................................................................................................]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="47"
+						y="110"
+						width="500"
+						height="18"
+						key="staticText-12"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" size="14"/>
+					</textElement>
+				<text><![CDATA[ส่ง HCC เนื่องจาก.........................................................................................................................................................................................]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="47"
+						y="152"
+						width="500"
+						height="18"
+						key="staticText-13"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="TH SarabunPSK" size="14"/>
+					</textElement>
+				<text><![CDATA[ลงชื่อแพทย์ผู้รักษา.............................................................................................................]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="47"
+						y="170"
+						width="500"
+						height="18"
+						key="staticText-14"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" size="14"/>
+					</textElement>
+				<text><![CDATA[                                                          (..............................................................................................)]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="227"
+						y="166"
+						width="202"
+						height="21"
+						key="textField-10"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Center">
+						<font fontName="TH SarabunPSK" size="16"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{doc_name}]]></textFieldExpression>
+				</textField>
+			</band>
+		</summary>
+</jasperReport>
