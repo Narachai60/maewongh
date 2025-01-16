@@ -2,7 +2,7 @@
 <!-- Created with iReport - A designer for JasperReports -->
 <!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
 <jasperReport
-		 name="Clinical Summary"
+		 name="Clinical-Summary"
 		 columnCount="1"
 		 printOrder="Vertical"
 		 orientation="Portrait"
@@ -25,93 +25,180 @@
 
 	<parameter name="visit_id" isForPrompting="false" class="java.lang.String"/>
 	<queryString><![CDATA[select 
-prefix1.patient_prefix_description || ' ' || per2.person_firstname ||' '|| per2.person_lastname ||' ว.'||b1.employee_number as doc_name,
-b1.employee_number as num,
-t_visit.visit_hn as HN,
-t_visit.visit_an as AN,
-t_visit.visit_vn as VN,
-site_full_name as hospital,
-'เลขที่' || ' ' ||site_house || '  ' || 'หมู่.' ||site_moo || '  ' || 'ต.' || f5.address_description || '  ' || 'อ.' || f6.address_description || '  ' || 'จ.' || f7.address_description as provice,
-f_patient_prefix.patient_prefix_description || ' ' || t_patient.patient_firstname || '  ' || t_patient.patient_lastname AS patient_name
-,CASE WHEN t_patient.patient_birthday <> '' THEN substring(age(to_date((to_number(substring(t_visit.visit_begin_visit_time, 1, 4), '9999') - 543) || substring(t_visit.visit_begin_visit_time, 5, 6), 'YYYY-MM-DD'),to_date((to_number(substring(t_patient.patient_birthday, 1, 4), '9999') - 543) || substring(t_patient.patient_birthday, 5, 6), 'YYYY-MM-DD'))::text, '([0-9]+) year')ELSE '' END AS ปี ,
+prefix1.patient_prefix_description || ' ' || per2.person_firstname ||' '|| per2.person_lastname ||' ว.'||b1.employee_number as doc_name
+,b1.employee_number as num
+--,b_employee.employee_number as num
+,t_visit.visit_hn as HN
+,t_visit.visit_an as AN
+,t_visit.visit_vn as VN
+,site_full_name as hospital
+ ,'เลขที่' || ' ' ||site_house 
+ || '  ' || 'หมู่.' ||site_moo 
+ || '  ' || 'ต.' || f5.address_description 
+ || '  ' || 'อ.' ||  f6.address_description 
+ || '  ' || 'จ.' ||   f7.address_description  as provice
 
-CASE WHEN t_patient.patient_birthday IS NOT NULL THEN substring(' ' ||age(to_date(((to_number(substring(t_visit.visit_begin_visit_time, 1, 4), '9999')::int -543) || substring(t_visit.visit_begin_visit_time, 5, 6)), 'YYYY-MM-DD'), to_date(((to_number(substring(t_patient.patient_birthday, 1, 4), '9999')::int -543) || substring(t_patient.patient_birthday, 5, 6)), 'YYYY-MM-DD')) from '(...)mon') ELSE ' ' END as เดือน,
+,f_patient_prefix.patient_prefix_description || ' ' || t_patient.patient_firstname || '  ' || t_patient.patient_lastname AS patient_name
+,CASE WHEN t_patient.patient_birthday <> '' then substring(' ' ||age(to_date(((to_number(substring(t_visit.visit_begin_visit_time, 1, 4), '9999') -543) || substring(t_visit.visit_begin_visit_time, 5, 6)), 'YYYY-MM-DD')
+,to_date(((to_number(substring(t_patient.patient_birthday, 1, 4), '9999') -543) || substring(t_patient.patient_birthday, 5, 6)), 'YYYY-MM-DD'))from '(...)year') else ' ' end as ปี
+,CASE WHEN t_patient.patient_birthday <> '' then substring(' ' ||age(to_date(((to_number(substring(t_visit.visit_begin_visit_time, 1, 4), '9999') -543) || substring(t_visit.visit_begin_visit_time, 5, 6)), 'YYYY-MM-DD')
+,to_date(((to_number(substring(t_patient.patient_birthday, 1, 4), '9999') -543) || substring(t_patient.patient_birthday, 5, 6)), 'YYYY-MM-DD'))from '(...)mon')  else ' ' end as เดือน
+,CASE WHEN t_patient.patient_birthday <> '' then substring(' ' ||age(to_date(((to_number(substring(t_visit.visit_begin_visit_time, 1, 4), '9999') -543) || substring(t_visit.visit_begin_visit_time, 5, 6)), 'YYYY-MM-DD')
+,to_date(((to_number(substring(t_patient.patient_birthday, 1, 4), '9999') -543) || substring(t_patient.patient_birthday, 5, 6)), 'YYYY-MM-DD'))from '(...)day')  else ' ' end as วัน
+,t_visit.visit_patient_age as patient_age
+, 'เลขที่' || ' ' ||patient_house 
+ || '  ' || 'หมู่.' ||patient_moo 
+ || '  ' || 'ต.' || f1.address_description 
+ || '  ' || 'อ.' ||  f2.address_description 
+ || '  ' || 'จ.' ||   f3.address_description  as address
+,t_patient.patient_pid as pid
+,t_visit.visit_dx as dx
+,substring(t_visit.visit_begin_visit_time,1,10) as datevisit
+--,to_char(to_date(t_visit.visit_begin_admit_date_time,'YYYY-MM-DD'),'DD/MM/YYYY') AS admission_date2
+,substr(t_visit.visit_begin_admit_date_time,9,2)||'/'||substr(t_visit.visit_begin_admit_date_time,6,2)||'/'||substr(t_visit.visit_begin_admit_date_time,1,4) AS admission_date2
+,substr(t_visit.visit_begin_admit_date_time,12,19) AS admission_time
+,case when (t_visit.visit_ipd_discharge_date_time = '')
+then ''
+else to_char(to_date(t_visit.visit_ipd_discharge_date_time,'YYYY-MM-DD'),'DD/MM/YYYY')
+end as discharge_date2
+,substr(t_visit.visit_ipd_discharge_date_time,12,19) AS discharge_time
+,case when (((substr(t_visit.visit_ipd_discharge_date_time,1,4)::int-543||'-'||substr(t_visit.visit_ipd_discharge_date_time,6,5))::date
+-(substr(t_visit.visit_begin_admit_date_time,1,4)::int-543||'-'||substr(t_visit.visit_begin_admit_date_time,6,5))::date)<=0)
+then 1 else ((substr(t_visit.visit_ipd_discharge_date_time,1,4)::int-543||'-'||substr(t_visit.visit_ipd_discharge_date_time,6,5))::date
+-(substr(t_visit.visit_begin_admit_date_time,1,4)::int-543||'-'||substr(t_visit.visit_begin_admit_date_time,6,5))::date) end as จำนวนวันนอน
+,case when q1.name_order <> '' then q1.name_order else '-' end as ชื่อยา
+,case when q2.name_appointment <> '' then q2.name_appointment else '-' end as name_order 
+,case when q2.appointment_date2 <> '' then q2.appointment_date2 else '-' end as appointment_date2
+,case when q2.appointment_time <> '' then q2.appointment_time else '-' end as appointment_time 
+,case when q2.appointment_notice <> '' then q2.appointment_notice else '-' end as appointment_notice  
 
-CASE WHEN t_patient.patient_birthday IS NOT NULL THEN substring(' ' ||age(to_date(((to_number(substring(t_visit.visit_begin_visit_time, 1, 4), '9999')::int -543) || substring(t_visit.visit_begin_visit_time, 5, 6)), 'YYYY-MM-DD'), to_date(((to_number(substring(t_patient.patient_birthday, 1, 4), '9999')::int -543) || substring(t_patient.patient_birthday, 5, 6)), 'YYYY-MM-DD')) from '(...)day') ELSE ' ' END as วัน,
-
-t_visit.visit_patient_age as patient_age,
-'เลขที่' || ' ' ||patient_house || '  ' || 'หมู่.' ||patient_moo || '  ' || 'ต.' || f1.address_description || '  ' || 'อ.' || f2.address_description || '  ' || 'จ.' || f3.address_description as address,
-t_patient.patient_pid as pid,
-t_visit.visit_dx as dx,
-substring(t_visit.visit_begin_visit_time,1,10) as datevisit,
-
-substr(t_visit.visit_begin_admit_date_time,9,2)||'/'||substr(t_visit.visit_begin_admit_date_time,6,2)||'/'||substr(t_visit.visit_begin_admit_date_time,1,4) AS admission_date2,
-substr(t_visit.visit_begin_admit_date_time,12,19) AS admission_time,
-
--- Use NULLIF() to handle empty string for integer type
-case when NULLIF(t_visit.visit_ipd_discharge_date_time, '') IS NULL then '' else to_char(to_date(t_visit.visit_ipd_discharge_date_time,'YYYY-MM-DD'),'DD/MM/YYYY') end as discharge_date2,
-substr(t_visit.visit_ipd_discharge_date_time,12,19) AS discharge_time,
-
-case when (((NULLIF(substr(t_visit.visit_ipd_discharge_date_time,1,4), '')::int-543||'-'||NULLIF(substr(t_visit.visit_ipd_discharge_date_time,6,5), ''))::date - (NULLIF(substr(t_visit.visit_begin_admit_date_time,1,4), '')::int-543||'-'||NULLIF(substr(t_visit.visit_begin_admit_date_time,6,5), ''))::date)<=0) then 1 
-else ((NULLIF(substr(t_visit.visit_ipd_discharge_date_time,1,4), '')::int-543||'-'||NULLIF(substr(t_visit.visit_ipd_discharge_date_time,6,5), ''))::date - (NULLIF(substr(t_visit.visit_begin_admit_date_time,1,4), '')::int-543||'-'||NULLIF(substr(t_visit.visit_begin_admit_date_time,6,5), ''))::date) end as จำนวนวันนอน,
-
-case when q1.name_order IS NOT NULL then q1.name_order else '-' end as ชื่อยา,
-case when q2.name_appointment IS NOT NULL then q2.name_appointment else '-' end as name_order,
-case when q2.appointment_date2 IS NOT NULL then q2.appointment_date2 else '-' end as appointment_date2,
-case when q2.appointment_time IS NOT NULL then q2.appointment_time else '-' end as appointment_time,
-case when q2.appointment_notice IS NOT NULL then q2.appointment_notice else '-' end as appointment_notice  
-
-from t_patient 
+from  t_patient 
 inner JOIN t_visit ON t_patient.t_patient_id = t_visit.t_patient_id
-left join (
-    select
-        t_order.t_visit_id as visit_id,
-        case when t_order_drug.order_drug_special_prescription_text IS NOT NULL then t_order.order_common_name || ' ' || REGEXP_REPLACE(t_order_drug.order_drug_special_prescription_text, '[\r\n]+', ' ', 'g') else t_order.order_common_name || ' ' || t_order_drug.order_drug_dose || ' ' || b_item_drug_uom.item_drug_uom_description || ' x ' || b_item_drug_frequency.item_drug_frequency_number || ' จำนวน ' || t_order.order_qty || ' ' || drug_uom.item_drug_uom_description end as name_order
-    from t_visit
-    left join t_order on t_visit.t_visit_id = t_order.t_visit_id
-    left join t_order_drug on t_order.t_order_id = t_order_drug.t_order_id 
-    left join b_item_drug_uom on t_order_drug.b_item_drug_uom_id_use = b_item_drug_uom.b_item_drug_uom_id
-    left join b_item_drug_uom as drug_uom on t_order_drug.b_item_drug_uom_id_purch = drug_uom.b_item_drug_uom_id
-    left join b_item_drug_frequency on t_order_drug.b_item_drug_frequency_id = b_item_drug_frequency.b_item_drug_frequency_id
-    where t_order.f_order_status_id <> '3' and t_order.order_home = '1' and t_order_drug.order_drug_active = '1'
-    group by t_order.t_visit_id, t_order.order_common_name, t_order_drug.order_drug_dose, b_item_drug_uom.item_drug_uom_description, b_item_drug_frequency.item_drug_frequency_number, t_order.order_qty, drug_uom.item_drug_uom_description, t_order_drug.order_drug_special_prescription_text
-) as q1 on t_visit.t_visit_id = q1.visit_id
+left join(select
+t_order.t_visit_id as visit_id 
+--,array_to_string(array_agg(t_order.order_common_name ||' จ่าย '||t_order.order_qty ||' '||drug_uom.item_drug_uom_description ||' '||t_order_drug.order_drug_dose||' x '||b_item_drug_frequency.item_drug_frequency_number),', ') as name_order
+--,array_to_string(array_agg(t_order.order_common_name||' '||t_order_drug.order_drug_dose||' '||b_item_drug_uom.item_drug_uom_description||' x '||b_item_drug_frequency.item_drug_frequency_number||' จำนวน '||t_order.order_qty ||' '||drug_uom.item_drug_uom_description ),', ') as name_order
 
-left join (
-    select
-        t_patient_appointment.visit_id_make_appointment as appointment_id,
-        array_to_string(array_agg(DISTINCT t_patient_appointment_order.patient_appointment_order_common_name), ' , ') as name_appointment,
-        array_to_string(array_agg(DISTINCT substr(t_patient_appointment.patient_appointment_date,9,2)||'\'||substr(t_patient_appointment.patient_appointment_date,6,2)||'\'||substr(t_patient_appointment.patient_appointment_date,1,4)), ' | ') AS appointment_date2,
-        array_to_string(array_agg(DISTINCT substr(t_patient_appointment.patient_appointment_time,1,5)), ' | ') AS appointment_time,
-        array_to_string(array_agg(DISTINCT t_patient_appointment.patient_appointment ||''|| t_patient_appointment.patient_appointment_notice), '  |  ') as appointment_notice  
-    from t_patient_appointment
-    left join t_patient_appointment_order on t_patient_appointment.t_patient_appointment_id = t_patient_appointment_order.t_patient_appointment_id
-    where patient_appointment_active = '1'
-    group by t_patient_appointment.visit_id_make_appointment
-) as q2 on t_visit.t_visit_id = q2.appointment_id
+--  ,t_order.order_common_name||' '||t_order_drug.order_drug_dose||' '||b_item_drug_uom.item_drug_uom_description||' x '||b_item_drug_frequency.item_drug_frequency_number||' จำนวน '||t_order.order_qty ||' '||drug_uom.item_drug_uom_description as name_order
+--  
+,case when t_order_drug.order_drug_special_prescription_text <> '' then t_order.order_common_name||' '||REGEXP_REPLACE(t_order_drug.order_drug_special_prescription_text, '[\r\n]+', ' ', 'g') else t_order.order_common_name||' '||t_order_drug.order_drug_dose||' '||b_item_drug_uom.item_drug_uom_description||' x '||b_item_drug_frequency.item_drug_frequency_number||' จำนวน '||t_order.order_qty ||' '||drug_uom.item_drug_uom_description end as name_order
+--,t_order_drug.order_drug_dose as จำนวนที่ใช้
+--,max(b_item_drug_uom.item_drug_uom_description) as หน่วยใช้
+--,b_item_drug_frequency.item_drug_frequency_number as ช่วงเวลาใช้ยา
+
+from  t_visit
+left join t_order on t_visit.t_visit_id = t_order.t_visit_id
+left join t_order_drug on t_order.t_order_id = t_order_drug.t_order_id 
+left join b_item_drug_uom on t_order_drug.b_item_drug_uom_id_use = b_item_drug_uom.b_item_drug_uom_id
+left join b_item_drug_uom as drug_uom on t_order_drug.b_item_drug_uom_id_purch = drug_uom.b_item_drug_uom_id
+left join b_item_drug_frequency on t_order_drug.b_item_drug_frequency_id = b_item_drug_frequency.b_item_drug_frequency_id
+
+left join b_item_drug_instruction on (t_order_drug.b_item_drug_instruction_id = b_item_drug_instruction.b_item_drug_instruction_id 
+and item_drug_instruction_active = '1') 
+left JOIN b_item_drug_uom as drug_use ON t_order_drug.b_item_drug_uom_id_use = drug_use.b_item_drug_uom_id
+
+where
+--t_visit.t_visit_id = '25511220161963031453596671'
+t_order.f_order_status_id <> '3'
+and t_order.order_home = '1'
+and t_order_drug.order_drug_active = '1'
+
+group by 
+t_order.t_visit_id
+,t_order.order_common_name
+,t_order_drug.order_drug_dose
+,b_item_drug_uom.item_drug_uom_description
+,b_item_drug_frequency.item_drug_frequency_number
+,t_order.order_qty
+,drug_uom.item_drug_uom_description
+,t_order_drug.order_drug_special_prescription_text
+,b_item_drug_instruction.item_drug_instruction_description
+,drug_use.item_drug_uom_description
+,b_item_drug_frequency.item_drug_frequency_description
+--,จำนวนที่ใช้
+--,ช่วงเวลาใช้ยา
+) as q1
+on t_visit.t_visit_id = q1.visit_id 
+
+left join(select
+t_patient_appointment.visit_id_make_appointment as appointment_id,
+array_to_string(array_agg(DISTINCT t_patient_appointment_order.patient_appointment_order_common_name), ' , ') as name_appointment,
+array_to_string(array_agg(DISTINCT substr(t_patient_appointment.patient_appointment_date,9,2)||'\'||substr(t_patient_appointment.patient_appointment_date,6,2)||'\'||substr(t_patient_appointment.patient_appointment_date,1,4)), ' | ') AS appointment_date2,
+array_to_string(array_agg(DISTINCT substr(t_patient_appointment.patient_appointment_time,1,5)), ' | ') AS appointment_time,
+array_to_string(array_agg(DISTINCT t_patient_appointment.patient_appointment ||''|| t_patient_appointment.patient_appointment_notice), '  |  ') as appointment_notice  
+
+from t_patient_appointment
+left join t_patient_appointment_order on t_patient_appointment.t_patient_appointment_id = t_patient_appointment_order.t_patient_appointment_id
+
+where
+patient_appointment_active = '1'
+--and t_patient_appointment.visit_id_make_appointment = '25511220169206171324674991'
+
+group by
+t_patient_appointment.visit_id_make_appointment) as q2
+on t_visit.t_visit_id = q2.appointment_id
 
 left join f_patient_prefix on t_patient.f_patient_prefix_id = f_patient_prefix.f_patient_prefix_id
 left join f_address as f1 on t_patient.patient_tambon = f1.f_address_id
 left join f_address as f2 on t_patient.patient_amphur = f2.f_address_id
 left join f_address as f3 on t_patient.patient_changwat = f3.f_address_id  
-left join t_visit_service on t_visit.t_visit_id = t_visit_service.t_visit_id
-left join t_diag_icd10 on (t_diag_icd10.diag_icd10_vn = t_visit.t_visit_id and t_diag_icd10.f_diag_icd10_type_id ='1' and t_diag_icd10.diag_icd10_active ='1')
-left join b_employee on t_diag_icd10.diag_icd10_staff_doctor = b_employee.b_employee_id
+left  join t_visit_service on t_visit.t_visit_id=t_visit_service.t_visit_id
+LEFT JOIN "public"."t_diag_icd10" "t_diag_icd10" 
+ON ("t_diag_icd10"."diag_icd10_vn" = "t_visit"."t_visit_id"  and "t_diag_icd10"."f_diag_icd10_type_id" ='1' and "t_diag_icd10"."diag_icd10_active" ='1')
+left  JOIN b_employee on t_diag_icd10.diag_icd10_staff_doctor = b_employee.b_employee_id
 left join t_person as per1 on (per1.t_person_id = b_employee.t_person_id and per1.active = '1')
-left join b_service_point on b_employee.b_service_point_id = b_service_point.b_service_point_id
-left join b_employee as b1 on t_visit.visit_patient_self_doctor = b1.b_employee_id
+left join b_service_point on b_employee.b_service_point_id=b_service_point.b_service_point_id
+LEFT JOIN b_employee as b1 ON t_visit.visit_patient_self_doctor = b1.b_employee_id
 left join t_person as per2 on (per2.t_person_id = b1.t_person_id and per2.active = '1')
-left join f_patient_prefix as prefix1 on per2.f_prefix_id = prefix1.f_patient_prefix_id
-, b_site 
+LEFT JOIN f_patient_prefix as prefix1 on per2.f_prefix_id = prefix1.f_patient_prefix_id
+,b_site 
 left join f_address as f5 on b_site.site_tambon = f5.f_address_id
 left join f_address as f6 on b_site.site_amphur = f6.f_address_id
-left join f_address as f7 on b_site.site_changwat = f7.f_address_id
+left join f_address as f7 on b_site.site_changwat = f7.f_address_id 
+
 
 where 
--- t_visit.t_visit_id = '255112209963517776'
 t_visit.t_visit_id =$P{visit_id}
+--t_visit.t_visit_id = '25511220161963031453596671'
+--t_visit.visit_vn = '167001273'
+--and substring(t_visit.visit_ipd_discharge_date_time,1,10) Between substring('2564-05-01',1,10) and substring('2564-05-31',1,10)
+--and t_visit.f_visit_type_id = '1'
+
 group by 
-prefix1.patient_prefix_description, per2.person_firstname, per2.person_lastname, b1.employee_number, t_visit.visit_hn, t_visit.visit_an, t_visit.visit_vn, b_site.site_full_name, b_site.site_house, b_site.site_moo, f5.address_description, f6.address_description, f7.address_description, f_patient_prefix.patient_prefix_description, t_patient.patient_firstname, t_patient.patient_lastname, t_patient.patient_birthday, t_visit.visit_begin_visit_time, t_visit.visit_patient_age, t_patient.patient_house, t_patient.patient_moo, f1.address_description, f2.address_description, f3.address_description, t_patient.patient_pid, t_visit.visit_dx, t_visit.visit_begin_admit_date_time, t_visit.visit_ipd_discharge_date_time, q1.name_order, q2.name_appointment, q2.appointment_date2, q2.appointment_time, q2.appointment_notice;]]></queryString>
+prefix1.patient_prefix_description
+,per2.person_firstname
+,per2.person_lastname
+,b1.employee_number
+,t_visit.visit_hn
+,t_visit.visit_an
+,t_visit.visit_vn
+,b_site.site_full_name
+,b_site.site_house
+,b_site.site_moo
+,f5.address_description
+,f6.address_description
+,f7.address_description
+,f_patient_prefix.patient_prefix_description
+,t_patient.patient_firstname
+,t_patient.patient_lastname
+,t_patient.patient_birthday
+,t_visit.visit_begin_visit_time
+,t_visit.visit_patient_age
+,t_patient.patient_house
+,t_patient.patient_moo
+,f1.address_description
+,f2.address_description
+,f3.address_description
+,t_patient.patient_pid
+,t_visit.visit_dx
+,t_visit.visit_begin_admit_date_time
+,t_visit.visit_staff_doctor_discharge_date_time
+,t_visit.visit_ipd_discharge_date_time
+,q1.name_order
+,q2.name_appointment
+,q2.appointment_date2
+,q2.appointment_time
+,q2.appointment_notice]]></queryString>
 
 	<field name="doc_name" class="java.lang.String"/>
 	<field name="num" class="java.lang.String"/>
@@ -338,7 +425,21 @@ Treatment/Progression...........................................................
 			</band>
 		</columnFooter>
 		<pageFooter>
-			<band height="0"  isSplitAllowed="true" >
+			<band height="34"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="355"
+						y="0"
+						width="236"
+						height="19"
+						key="staticText-15"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" size="16"/>
+					</textElement>
+				<text><![CDATA[IPD....................................................................................
+]]></text>
+				</staticText>
 			</band>
 		</pageFooter>
 		<summary>
@@ -368,7 +469,6 @@ Treatment/Progression...........................................................
 						<font fontName="TH SarabunPSK" size="14"/>
 					</textElement>
 				<text><![CDATA[แผนการรักษา/ติดตาม]]></text>
-				
 				</staticText>
 				<staticText>
 					<reportElement
