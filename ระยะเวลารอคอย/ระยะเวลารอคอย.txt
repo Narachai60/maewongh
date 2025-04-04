@@ -1,0 +1,368 @@
+(
+SELECT 'Morning' as opd_type
+,substring(q1.visit_begin,1,10) as vstdate
+,TO_CHAR(make_interval(secs => AVG(EXTRACT(EPOCH FROM (
+    TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS') - 
+    TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
+  )))), 'MI:SS') AS visit_screen,
+
+  TO_CHAR(make_interval(secs => AVG(
+    CASE 
+      WHEN q1.opd_begin IS NOT NULL AND q1.opd_end IS NOT NULL AND q1.opd_end > q1.opd_begin THEN
+        EXTRACT(EPOCH FROM (
+          TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS') - 
+          TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS')
+        ))
+      ELSE 0
+    END
+  )), 'MI:SS') AS avg_screen,
+
+  TO_CHAR(make_interval(secs => AVG(
+    CASE 
+      WHEN q1.opd_end IS NOT NULL AND q1.doc_begin IS NOT NULL AND q1.doc_begin > q1.opd_end THEN
+        EXTRACT(EPOCH FROM (
+          TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS') - 
+          TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS')
+        ))
+      ELSE 0
+    END
+  )), 'MI:SS') AS screen_doctor,
+
+  TO_CHAR(make_interval(secs => AVG(
+    CASE 
+      WHEN q1.doc_begin IS NOT NULL AND q1.doc_end IS NOT NULL AND q1.doc_end > q1.doc_begin THEN
+        EXTRACT(EPOCH FROM (
+          TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS') - 
+          TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS')
+        ))
+      ELSE 0
+    END
+  )), 'MI:SS') AS avg_doctor,
+
+  TO_CHAR(make_interval(secs => AVG(
+    CASE 
+      WHEN q1.doc_end IS NOT NULL AND q1.pharm_begin IS NOT NULL AND q1.pharm_begin > q1.doc_end THEN
+        EXTRACT(EPOCH FROM (
+          TO_TIMESTAMP(q1.pharm_begin, 'YYYY-MM-DD HH24:MI:SS') - 
+          TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS')
+        ))
+      ELSE 0
+    END
+  )), 'MI:SS') AS doctor_pharma,
+
+  TO_CHAR(make_interval(secs => AVG(
+    CASE 
+      WHEN q1.pharm_begin IS NOT NULL AND q1.pharm_end IS NOT NULL AND q1.pharm_end > q1.pharm_begin THEN
+        EXTRACT(EPOCH FROM (
+          TO_TIMESTAMP(q1.pharm_end, 'YYYY-MM-DD HH24:MI:SS') - 
+          TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
+        ))
+      ELSE 0
+    END
+  )), 'MI:SS') AS avg_visit_pharma
+FROM				
+(
+SELECT DISTINCT
+t_visit.visit_vn as vn
+,t_visit.visit_hn as hn
+,substring(t_visit.visit_begin_visit_time,1,10) as วันที่มารับบริการ
+,substring(t_visit.visit_begin_visit_time,12,9) as เวลาที่มารับบริการ
+,t_patient.patient_firstname || '  ' || t_patient.patient_lastname AS ชื่อผู้ป่วย
+,b_visit_queue_setup.visit_queue_setup_description as คิว
+,t_visit.visit_begin_visit_time as visit_begin
+,t_visit.visit_financial_discharge_time as visit_end
+,MIN(CASE WHEN b_service_point.b_service_point_id = '2060761082126' AND t_visit_service.visit_service_treatment_date_time IS NOT NULL 
+             THEN t_visit_service.visit_service_treatment_date_time ELSE NULL END) as opd_begin
+,MIN(CASE WHEN b_service_point.b_service_point_id = '2060761082126' AND t_visit_service.visit_service_finish_date_time IS NOT NULL 
+             THEN t_visit_service.visit_service_finish_date_time ELSE NULL END) as opd_end
+,MIN(CASE WHEN b_service_point.b_service_point_id = '2068315875716' AND t_visit_service.visit_service_treatment_date_time IS NOT NULL 
+             THEN t_visit_service.visit_service_treatment_date_time ELSE NULL END) as doc_begin
+,MIN(CASE WHEN b_service_point.b_service_point_id = '2068315875716' AND t_visit_service.visit_service_finish_date_time IS NOT NULL 
+             THEN t_visit_service.visit_service_finish_date_time ELSE NULL END) as doc_end
+,MIN(CASE WHEN b_service_point.b_service_point_id = '2068197173050' AND t_visit_service.visit_service_treatment_date_time IS NOT NULL 
+             THEN t_visit_service.visit_service_treatment_date_time ELSE NULL END) as pharm_begin
+,MIN(CASE WHEN b_service_point.b_service_point_id = '2068197173050' AND t_visit_service.visit_service_finish_date_time IS NOT NULL 
+             THEN t_visit_service.visit_service_finish_date_time ELSE NULL END) as pharm_end
+FROM t_visit
+LEFT JOIN t_patient on t_visit.t_patient_id = t_patient.t_patient_id
+LEFT JOIN t_visit_service on t_visit.t_visit_id = t_visit_service.t_visit_id
+LEFT join b_service_point on t_visit_service.b_service_point_id=b_service_point.b_service_point_id and b_service_point.b_service_point_id in ( '2060761082126','2068315875716','2068197173050')
+LEFT JOIN b_visit_clinic on t_visit.b_visit_clinic_id = b_visit_clinic.b_visit_clinic_id
+left join t_visit_queue_map on t_visit.t_visit_id = t_visit_queue_map.t_visit_id
+left join b_visit_queue_setup on t_visit_queue_map.b_visit_queue_setup_id = b_visit_queue_setup.b_visit_queue_setup_id
+LEFT JOIN f_visit_opd_discharge_status on t_visit.f_visit_opd_discharge_status_id = f_visit_opd_discharge_status.f_visit_opd_discharge_status_id
+LEFT JOIN t_visit_primary_symptom ON t_visit.t_visit_id = t_visit_primary_symptom.t_visit_id
+WHERE t_visit.f_visit_status_id <> '4'
+and t_visit.f_visit_type_id = '0'
+and substring(t_visit.visit_begin_visit_time,1,10) Between substring('2568-03-31',1,10) and substring('2568-03-31',1,10)
+AND CAST(substring(t_visit.visit_begin_visit_time, 12, 8) AS TIME) BETWEEN '08:30:00' AND '12:00:00' -- กรองเวลา
+and t_visit_queue_map.b_visit_queue_setup_id = '3217538747849'
+AND NOT EXISTS (  -- ใช้ NOT EXISTS เพื่อกรองเฉพาะ visit ที่ไม่มีใน t_patient_appointment
+    SELECT 1 
+    FROM t_patient_appointment pa
+    WHERE pa.t_visit_id = t_visit.t_visit_id
+)
+AND NOT EXISTS (  
+    SELECT 1 
+    FROM b_dayoff df
+    WHERE t_visit.visit_begin_visit_time::DATE = (df.dayoff_date + INTERVAL '543 years')
+)
+GROUP BY 
+ vn
+ ,hn
+,วันที่มารับบริการ
+, เวลาที่มารับบริการ
+, ชื่อผู้ป่วย
+,t_visit.visit_begin_visit_time
+,t_visit.visit_financial_discharge_time
+,b_visit_queue_setup.visit_queue_setup_description
+) as q1
+WHERE opd_begin <> ''
+GROUP BY vstdate
+)
+UNION
+(
+SELECT 'Affternoon' as opd_type
+,substring(q1.visit_begin,1,10) as vstdate
+,TO_CHAR(make_interval(secs => AVG(EXTRACT(EPOCH FROM (
+    TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS') - 
+    TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
+  )))), 'MI:SS') AS visit_screen,
+
+  TO_CHAR(make_interval(secs => AVG(
+    CASE 
+      WHEN q1.opd_begin IS NOT NULL AND q1.opd_end IS NOT NULL AND q1.opd_end > q1.opd_begin THEN
+        EXTRACT(EPOCH FROM (
+          TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS') - 
+          TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS')
+        ))
+      ELSE 0
+    END
+  )), 'MI:SS') AS avg_screen,
+
+  TO_CHAR(make_interval(secs => AVG(
+    CASE 
+      WHEN q1.opd_end IS NOT NULL AND q1.doc_begin IS NOT NULL AND q1.doc_begin > q1.opd_end THEN
+        EXTRACT(EPOCH FROM (
+          TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS') - 
+          TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS')
+        ))
+      ELSE 0
+    END
+  )), 'MI:SS') AS screen_doctor,
+
+  TO_CHAR(make_interval(secs => AVG(
+    CASE 
+      WHEN q1.doc_begin IS NOT NULL AND q1.doc_end IS NOT NULL AND q1.doc_end > q1.doc_begin THEN
+        EXTRACT(EPOCH FROM (
+          TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS') - 
+          TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS')
+        ))
+      ELSE 0
+    END
+  )), 'MI:SS') AS avg_doctor,
+
+  TO_CHAR(make_interval(secs => AVG(
+    CASE 
+      WHEN q1.doc_end IS NOT NULL AND q1.pharm_begin IS NOT NULL AND q1.pharm_begin > q1.doc_end THEN
+        EXTRACT(EPOCH FROM (
+          TO_TIMESTAMP(q1.pharm_begin, 'YYYY-MM-DD HH24:MI:SS') - 
+          TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS')
+        ))
+      ELSE 0
+    END
+  )), 'MI:SS') AS doctor_pharma,
+
+  TO_CHAR(make_interval(secs => AVG(
+    CASE 
+      WHEN q1.pharm_begin IS NOT NULL AND q1.pharm_end IS NOT NULL AND q1.pharm_end > q1.pharm_begin THEN
+        EXTRACT(EPOCH FROM (
+          TO_TIMESTAMP(q1.pharm_end, 'YYYY-MM-DD HH24:MI:SS') - 
+          TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
+        ))
+      ELSE 0
+    END
+  )), 'MI:SS') AS avg_visit_pharma
+FROM				
+(
+SELECT DISTINCT
+t_visit.visit_vn as vn
+,t_visit.visit_hn as hn
+,substring(t_visit.visit_begin_visit_time,1,10) as วันที่มารับบริการ
+,substring(t_visit.visit_begin_visit_time,12,9) as เวลาที่มารับบริการ
+,t_patient.patient_firstname || '  ' || t_patient.patient_lastname AS ชื่อผู้ป่วย
+,b_visit_queue_setup.visit_queue_setup_description as คิว
+,t_visit.visit_begin_visit_time as visit_begin
+,t_visit.visit_financial_discharge_time as visit_end
+,MIN(CASE WHEN b_service_point.b_service_point_id = '2060761082126' AND t_visit_service.visit_service_treatment_date_time IS NOT NULL 
+             THEN t_visit_service.visit_service_treatment_date_time ELSE NULL END) as opd_begin
+,MIN(CASE WHEN b_service_point.b_service_point_id = '2060761082126' AND t_visit_service.visit_service_finish_date_time IS NOT NULL 
+             THEN t_visit_service.visit_service_finish_date_time ELSE NULL END) as opd_end
+,MIN(CASE WHEN b_service_point.b_service_point_id = '2068315875716' AND t_visit_service.visit_service_treatment_date_time IS NOT NULL 
+             THEN t_visit_service.visit_service_treatment_date_time ELSE NULL END) as doc_begin
+,MIN(CASE WHEN b_service_point.b_service_point_id = '2068315875716' AND t_visit_service.visit_service_finish_date_time IS NOT NULL 
+             THEN t_visit_service.visit_service_finish_date_time ELSE NULL END) as doc_end
+,MIN(CASE WHEN b_service_point.b_service_point_id = '2068197173050' AND t_visit_service.visit_service_treatment_date_time IS NOT NULL 
+             THEN t_visit_service.visit_service_treatment_date_time ELSE NULL END) as pharm_begin
+,MIN(CASE WHEN b_service_point.b_service_point_id = '2068197173050' AND t_visit_service.visit_service_finish_date_time IS NOT NULL 
+             THEN t_visit_service.visit_service_finish_date_time ELSE NULL END) as pharm_end
+FROM t_visit
+LEFT JOIN t_patient on t_visit.t_patient_id = t_patient.t_patient_id
+LEFT JOIN t_visit_service on t_visit.t_visit_id = t_visit_service.t_visit_id
+LEFT join b_service_point on t_visit_service.b_service_point_id=b_service_point.b_service_point_id and b_service_point.b_service_point_id in ( '2060761082126','2068315875716','2068197173050')
+LEFT JOIN b_visit_clinic on t_visit.b_visit_clinic_id = b_visit_clinic.b_visit_clinic_id
+left join t_visit_queue_map on t_visit.t_visit_id = t_visit_queue_map.t_visit_id
+left join b_visit_queue_setup on t_visit_queue_map.b_visit_queue_setup_id = b_visit_queue_setup.b_visit_queue_setup_id
+LEFT JOIN f_visit_opd_discharge_status on t_visit.f_visit_opd_discharge_status_id = f_visit_opd_discharge_status.f_visit_opd_discharge_status_id
+LEFT JOIN t_visit_primary_symptom ON t_visit.t_visit_id = t_visit_primary_symptom.t_visit_id
+WHERE t_visit.f_visit_status_id <> '4'
+and t_visit.f_visit_type_id = '0'
+and substring(t_visit.visit_begin_visit_time,1,10) Between substring('2568-03-31',1,10) and substring('2568-03-31',1,10)
+AND CAST(substring(t_visit.visit_begin_visit_time, 12, 8) AS TIME) BETWEEN '13:00:00' AND '16:30:00' -- กรองเวลา
+and t_visit_queue_map.b_visit_queue_setup_id = '3217538747849'
+AND NOT EXISTS (  -- ใช้ NOT EXISTS เพื่อกรองเฉพาะ visit ที่ไม่มีใน t_patient_appointment
+    SELECT 1 
+    FROM t_patient_appointment pa
+    WHERE pa.t_visit_id = t_visit.t_visit_id
+)
+AND NOT EXISTS (  
+    SELECT 1 
+    FROM b_dayoff df
+    WHERE t_visit.visit_begin_visit_time::DATE = (df.dayoff_date + INTERVAL '543 years')
+)
+GROUP BY 
+ vn
+ ,hn
+,วันที่มารับบริการ
+, เวลาที่มารับบริการ
+, ชื่อผู้ป่วย
+,t_visit.visit_begin_visit_time
+,t_visit.visit_financial_discharge_time
+,b_visit_queue_setup.visit_queue_setup_description
+) as q1
+WHERE opd_begin <> ''
+GROUP BY vstdate
+)
+UNION
+(
+SELECT 'AllDay' as opd_type
+,substring(q1.visit_begin,1,10) as vstdate
+,TO_CHAR(make_interval(secs => AVG(EXTRACT(EPOCH FROM (
+    TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS') - 
+    TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
+  )))), 'MI:SS') AS visit_screen,
+
+  TO_CHAR(make_interval(secs => AVG(
+    CASE 
+      WHEN q1.opd_begin IS NOT NULL AND q1.opd_end IS NOT NULL AND q1.opd_end > q1.opd_begin THEN
+        EXTRACT(EPOCH FROM (
+          TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS') - 
+          TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS')
+        ))
+      ELSE 0
+    END
+  )), 'MI:SS') AS avg_screen,
+
+  TO_CHAR(make_interval(secs => AVG(
+    CASE 
+      WHEN q1.opd_end IS NOT NULL AND q1.doc_begin IS NOT NULL AND q1.doc_begin > q1.opd_end THEN
+        EXTRACT(EPOCH FROM (
+          TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS') - 
+          TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS')
+        ))
+      ELSE 0
+    END
+  )), 'MI:SS') AS screen_doctor,
+
+  TO_CHAR(make_interval(secs => AVG(
+    CASE 
+      WHEN q1.doc_begin IS NOT NULL AND q1.doc_end IS NOT NULL AND q1.doc_end > q1.doc_begin THEN
+        EXTRACT(EPOCH FROM (
+          TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS') - 
+          TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS')
+        ))
+      ELSE 0
+    END
+  )), 'MI:SS') AS avg_doctor,
+
+  TO_CHAR(make_interval(secs => AVG(
+    CASE 
+      WHEN q1.doc_end IS NOT NULL AND q1.pharm_begin IS NOT NULL AND q1.pharm_begin > q1.doc_end THEN
+        EXTRACT(EPOCH FROM (
+          TO_TIMESTAMP(q1.pharm_begin, 'YYYY-MM-DD HH24:MI:SS') - 
+          TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS')
+        ))
+      ELSE 0
+    END
+  )), 'MI:SS') AS doctor_pharma,
+
+  TO_CHAR(make_interval(secs => AVG(
+    CASE 
+      WHEN q1.pharm_begin IS NOT NULL AND q1.pharm_end IS NOT NULL AND q1.pharm_end > q1.pharm_begin THEN
+        EXTRACT(EPOCH FROM (
+          TO_TIMESTAMP(q1.pharm_end, 'YYYY-MM-DD HH24:MI:SS') - 
+          TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
+        ))
+      ELSE 0
+    END
+  )), 'MI:SS') AS avg_visit_pharma
+FROM				
+(
+SELECT DISTINCT
+t_visit.visit_vn as vn
+,t_visit.visit_hn as hn
+,substring(t_visit.visit_begin_visit_time,1,10) as วันที่มารับบริการ
+,substring(t_visit.visit_begin_visit_time,12,9) as เวลาที่มารับบริการ
+,t_patient.patient_firstname || '  ' || t_patient.patient_lastname AS ชื่อผู้ป่วย
+,b_visit_queue_setup.visit_queue_setup_description as คิว
+,t_visit.visit_begin_visit_time as visit_begin
+,t_visit.visit_financial_discharge_time as visit_end
+,MIN(CASE WHEN b_service_point.b_service_point_id = '2060761082126' AND t_visit_service.visit_service_treatment_date_time IS NOT NULL 
+             THEN t_visit_service.visit_service_treatment_date_time ELSE NULL END) as opd_begin
+,MIN(CASE WHEN b_service_point.b_service_point_id = '2060761082126' AND t_visit_service.visit_service_finish_date_time IS NOT NULL 
+             THEN t_visit_service.visit_service_finish_date_time ELSE NULL END) as opd_end
+,MIN(CASE WHEN b_service_point.b_service_point_id = '2068315875716' AND t_visit_service.visit_service_treatment_date_time IS NOT NULL 
+             THEN t_visit_service.visit_service_treatment_date_time ELSE NULL END) as doc_begin
+,MIN(CASE WHEN b_service_point.b_service_point_id = '2068315875716' AND t_visit_service.visit_service_finish_date_time IS NOT NULL 
+             THEN t_visit_service.visit_service_finish_date_time ELSE NULL END) as doc_end
+,MIN(CASE WHEN b_service_point.b_service_point_id = '2068197173050' AND t_visit_service.visit_service_treatment_date_time IS NOT NULL 
+             THEN t_visit_service.visit_service_treatment_date_time ELSE NULL END) as pharm_begin
+,MIN(CASE WHEN b_service_point.b_service_point_id = '2068197173050' AND t_visit_service.visit_service_finish_date_time IS NOT NULL 
+             THEN t_visit_service.visit_service_finish_date_time ELSE NULL END) as pharm_end
+FROM t_visit
+LEFT JOIN t_patient on t_visit.t_patient_id = t_patient.t_patient_id
+LEFT JOIN t_visit_service on t_visit.t_visit_id = t_visit_service.t_visit_id
+LEFT join b_service_point on t_visit_service.b_service_point_id=b_service_point.b_service_point_id and b_service_point.b_service_point_id in ( '2060761082126','2068315875716','2068197173050')
+LEFT JOIN b_visit_clinic on t_visit.b_visit_clinic_id = b_visit_clinic.b_visit_clinic_id
+left join t_visit_queue_map on t_visit.t_visit_id = t_visit_queue_map.t_visit_id
+left join b_visit_queue_setup on t_visit_queue_map.b_visit_queue_setup_id = b_visit_queue_setup.b_visit_queue_setup_id
+LEFT JOIN f_visit_opd_discharge_status on t_visit.f_visit_opd_discharge_status_id = f_visit_opd_discharge_status.f_visit_opd_discharge_status_id
+LEFT JOIN t_visit_primary_symptom ON t_visit.t_visit_id = t_visit_primary_symptom.t_visit_id
+WHERE t_visit.f_visit_status_id <> '4'
+and t_visit.f_visit_type_id = '0'
+and substring(t_visit.visit_begin_visit_time,1,10) Between substring('2568-03-31',1,10) and substring('2568-03-31',1,10)
+AND CAST(substring(t_visit.visit_begin_visit_time, 12, 8) AS TIME) BETWEEN '08:30:00' AND '16:30:00' -- กรองเวลา
+and t_visit_queue_map.b_visit_queue_setup_id = '3217538747849'
+AND NOT EXISTS (  -- ใช้ NOT EXISTS เพื่อกรองเฉพาะ visit ที่ไม่มีใน t_patient_appointment
+    SELECT 1 
+    FROM t_patient_appointment pa
+    WHERE pa.t_visit_id = t_visit.t_visit_id
+)
+AND NOT EXISTS (  
+    SELECT 1 
+    FROM b_dayoff df
+    WHERE t_visit.visit_begin_visit_time::DATE = (df.dayoff_date + INTERVAL '543 years')
+)
+GROUP BY 
+ vn
+ ,hn
+,วันที่มารับบริการ
+, เวลาที่มารับบริการ
+, ชื่อผู้ป่วย
+,t_visit.visit_begin_visit_time
+,t_visit.visit_financial_discharge_time
+,b_visit_queue_setup.visit_queue_setup_description
+) as q1
+WHERE opd_begin <> ''
+GROUP BY vstdate
+)
