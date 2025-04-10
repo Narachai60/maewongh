@@ -2,7 +2,8 @@ SELECT *
 FROM (
 
   -- Morning
-  (SELECT 'Morning' as opd_type, substring(q1.visit_begin,1,10) as vstdate,
+  (SELECT 'Morning' as opd_type, 
+	TO_CHAR(TO_DATE(substring(q1.visit_begin,1,10), 'YYYY-MM-DD') - INTERVAL '543 years', 'YYYY-MM-DD') as vstdate ,
     TO_CHAR(make_interval(secs => AVG(EXTRACT(EPOCH FROM (
         TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS') - 
         TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
@@ -128,7 +129,8 @@ TO_CHAR(
   UNION
 
   -- Afternoon
-  (SELECT 'Afternoon' as opd_type, substring(q1.visit_begin,1,10) as vstdate,
+  (SELECT 'Afternoon' as opd_type, 
+		TO_CHAR(TO_DATE(substring(q1.visit_begin,1,10), 'YYYY-MM-DD') - INTERVAL '543 years', 'YYYY-MM-DD') as vstdate ,
     TO_CHAR(make_interval(secs => AVG(EXTRACT(EPOCH FROM (
         TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS') - 
         TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
@@ -254,7 +256,8 @@ TO_CHAR(
   UNION
 
   -- AllDay
-  (SELECT 'AllDay' as opd_type, substring(q1.visit_begin,1,10) as vstdate,
+  (SELECT 'AllDay' as opd_type, 
+		TO_CHAR(TO_DATE(substring(q1.visit_begin,1,10), 'YYYY-MM-DD') - INTERVAL '543 years', 'YYYY-MM-DD') as vstdate ,
     TO_CHAR(make_interval(secs => AVG(EXTRACT(EPOCH FROM (
         TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS') - 
         TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
