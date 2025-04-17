@@ -2,7 +2,7 @@
 <!-- Created with iReport - A designer for JasperReports -->
 <!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
 <jasperReport
-		 name="note"
+		 name="noteเนื้อหา"
 		 columnCount="1"
 		 printOrder="Horizontal"
 		 orientation="Landscape"
@@ -627,6 +627,136 @@ GROUP BY t_visit.visit_hn
 						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="14" isBold="false" isUnderline="false"/>
 					</textElement>
 				<text><![CDATA[หน้าที่.........]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="304"
+						y="107"
+						width="267"
+						height="16"
+						key="staticText-26"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="14" isBold="false" isUnderline="false"/>
+					</textElement>
+				<text><![CDATA[▢ กลับบ้าน ▢ Admit ▢ Refer ▢ ปฏิเสธการรักษา]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="304"
+						y="123"
+						width="267"
+						height="16"
+						key="staticText-27"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="14" isBold="false" isUnderline="false"/>
+					</textElement>
+				<text><![CDATA[โดย....................เวลา...................สภาพผู้ป่วย......................]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="304"
+						y="139"
+						width="267"
+						height="16"
+						key="staticText-28"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="14" isBold="false" isUnderline="false"/>
+					</textElement>
+				<text><![CDATA[MV......................BP....................mmHg P..................bpm]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="304"
+						y="155"
+						width="267"
+						height="16"
+						key="staticText-29"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="14" isBold="false" isUnderline="false"/>
+					</textElement>
+				<text><![CDATA[R........................bpm T...................c O2sat..................%]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="304"
+						y="177"
+						width="267"
+						height="16"
+						key="staticText-30"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="12" isBold="false" isUnderline="false"/>
+					</textElement>
+				<text><![CDATA[ผู้ให้ข้อมูล  ▢ ภาวะการเจ็บป่วย    ▢ การรักษาพยาบาลที่ให้    ▢ การวินิจฉัยโรค]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="340"
+						y="193"
+						width="231"
+						height="15"
+						key="staticText-31"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="12" isBold="false" isUnderline="false"/>
+					</textElement>
+				<text><![CDATA[▢ การรักษาของแพทย์ ▢ อาการที่ต้องมาพบแพทย์  ▢ การใช้สิทธิบัตร]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="340"
+						y="208"
+						width="241"
+						height="15"
+						key="staticText-32"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="12" isBold="false" isUnderline="false"/>
+					</textElement>
+				<text><![CDATA[▢ การปฏิบัติตัว          ▢ การตรวจตามนัด           ▢ โรงพยาบาลที่ส่งต่อ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="340"
+						y="222"
+						width="241"
+						height="15"
+						key="staticText-33"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="12" isBold="false" isUnderline="false"/>
+					</textElement>
+				<text><![CDATA[▢ ประสานหอผู้ป่วยใน ▢ แนะนำข้อปฏิบัติตัว ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="340"
+						y="236"
+						width="241"
+						height="15"
+						key="staticText-34"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="12" isBold="false" isUnderline="false"/>
+					</textElement>
+				<text><![CDATA[▢ ผลที่จะเกิดตามมาหลังจากปฏิเสธการรักษา]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="304"
+						y="273"
+						width="282"
+						height="20"
+						key="staticText-35"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Left">
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="14" isBold="false" isUnderline="false"/>
+					</textElement>
+				<text><![CDATA[ผู้ให้ข้อมูล........................................ผู้รับข้อมูล.......................................]]></text>
 				</staticText>
 			</band>
 		</pageHeader>
