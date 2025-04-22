@@ -196,6 +196,8 @@ TO_CHAR(
       WHEN NULLIF(q1.doc_end, '') IS NOT NULL AND NULLIF(q1.pharm_begin, '') IS NOT NULL 
            AND TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS') > 
                TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS')
+						AND TO_CHAR(TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') = 
+               TO_CHAR(TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
       THEN GREATEST(EXTRACT(EPOCH FROM (
         TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS') - 
         TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS')
@@ -325,6 +327,8 @@ TO_CHAR(
       WHEN NULLIF(q1.doc_end, '') IS NOT NULL AND NULLIF(q1.pharm_begin, '') IS NOT NULL 
            AND TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS') > 
                TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS')
+					 AND TO_CHAR(TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') = 
+               TO_CHAR(TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
       THEN GREATEST(EXTRACT(EPOCH FROM (
         TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS') - 
         TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS')
