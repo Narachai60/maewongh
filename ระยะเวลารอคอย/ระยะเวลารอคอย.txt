@@ -64,9 +64,12 @@ TO_CHAR(
       WHEN NULLIF(q1.doc_end, '') IS NOT NULL AND NULLIF(q1.pharm_begin, '') IS NOT NULL 
            AND TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS') > 
                TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS')
+					 AND TO_CHAR(TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') = 
+               TO_CHAR(TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
       THEN GREATEST(EXTRACT(EPOCH FROM (
         TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS') - 
         TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS')
+				
       )), 0)
       ELSE NULL
     END
@@ -82,6 +85,8 @@ TO_CHAR(
            AND NULLIF(q1.visit_begin, '') IS NOT NULL
            AND TO_TIMESTAMP(NULLIF(q1.pharm_end, ''), 'YYYY-MM-DD HH24:MI:SS') > 
                TO_TIMESTAMP(NULLIF(q1.visit_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
+           AND TO_CHAR(TO_TIMESTAMP(NULLIF(q1.visit_begin, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') = 
+               TO_CHAR(TO_TIMESTAMP(NULLIF(q1.pharm_end, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
       THEN GREATEST(EXTRACT(EPOCH FROM (
         TO_TIMESTAMP(NULLIF(q1.pharm_end, ''), 'YYYY-MM-DD HH24:MI:SS') - 
         TO_TIMESTAMP(NULLIF(q1.visit_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
@@ -112,7 +117,7 @@ TO_CHAR(
     LEFT JOIN t_visit_queue_map on t_visit.t_visit_id = t_visit_queue_map.t_visit_id
     WHERE t_visit.f_visit_status_id <> '4'
       AND t_visit.f_visit_type_id = '0'
-      AND substring(t_visit.visit_begin_visit_time,1,10) BETWEEN :startdate AND :enddate
+      AND substring(t_visit.visit_begin_visit_time,1,10) BETWEEN :start_date AND :end_date
       AND CAST(substring(t_visit.visit_begin_visit_time, 12, 8) AS TIME) BETWEEN '08:30:00' AND '12:00:00'
       AND t_visit_queue_map.b_visit_queue_setup_id = '3217538747849'
       AND NOT EXISTS (
@@ -191,6 +196,8 @@ TO_CHAR(
       WHEN NULLIF(q1.doc_end, '') IS NOT NULL AND NULLIF(q1.pharm_begin, '') IS NOT NULL 
            AND TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS') > 
                TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS')
+						AND TO_CHAR(TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') = 
+               TO_CHAR(TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
       THEN GREATEST(EXTRACT(EPOCH FROM (
         TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS') - 
         TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS')
@@ -209,6 +216,8 @@ TO_CHAR(
            AND NULLIF(q1.visit_begin, '') IS NOT NULL
            AND TO_TIMESTAMP(NULLIF(q1.pharm_end, ''), 'YYYY-MM-DD HH24:MI:SS') > 
                TO_TIMESTAMP(NULLIF(q1.visit_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
+           AND TO_CHAR(TO_TIMESTAMP(NULLIF(q1.visit_begin, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') = 
+               TO_CHAR(TO_TIMESTAMP(NULLIF(q1.pharm_end, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
       THEN GREATEST(EXTRACT(EPOCH FROM (
         TO_TIMESTAMP(NULLIF(q1.pharm_end, ''), 'YYYY-MM-DD HH24:MI:SS') - 
         TO_TIMESTAMP(NULLIF(q1.visit_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
@@ -239,7 +248,7 @@ TO_CHAR(
     LEFT JOIN t_visit_queue_map on t_visit.t_visit_id = t_visit_queue_map.t_visit_id
     WHERE t_visit.f_visit_status_id <> '4'
       AND t_visit.f_visit_type_id = '0'
-      AND substring(t_visit.visit_begin_visit_time,1,10) BETWEEN :startdate AND :enddate
+      AND substring(t_visit.visit_begin_visit_time,1,10) BETWEEN :start_date AND :end_date
       AND CAST(substring(t_visit.visit_begin_visit_time, 12, 8) AS TIME) BETWEEN '13:00:00' AND '16:30:00'
       AND t_visit_queue_map.b_visit_queue_setup_id = '3217538747849'
       AND NOT EXISTS (
@@ -318,6 +327,8 @@ TO_CHAR(
       WHEN NULLIF(q1.doc_end, '') IS NOT NULL AND NULLIF(q1.pharm_begin, '') IS NOT NULL 
            AND TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS') > 
                TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS')
+					 AND TO_CHAR(TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') = 
+               TO_CHAR(TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
       THEN GREATEST(EXTRACT(EPOCH FROM (
         TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS') - 
         TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS')
@@ -336,6 +347,8 @@ TO_CHAR(
            AND NULLIF(q1.visit_begin, '') IS NOT NULL
            AND TO_TIMESTAMP(NULLIF(q1.pharm_end, ''), 'YYYY-MM-DD HH24:MI:SS') > 
                TO_TIMESTAMP(NULLIF(q1.visit_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
+           AND TO_CHAR(TO_TIMESTAMP(NULLIF(q1.visit_begin, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') = 
+               TO_CHAR(TO_TIMESTAMP(NULLIF(q1.pharm_end, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
       THEN GREATEST(EXTRACT(EPOCH FROM (
         TO_TIMESTAMP(NULLIF(q1.pharm_end, ''), 'YYYY-MM-DD HH24:MI:SS') - 
         TO_TIMESTAMP(NULLIF(q1.visit_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
@@ -367,7 +380,7 @@ TO_CHAR(
     LEFT JOIN t_visit_queue_map on t_visit.t_visit_id = t_visit_queue_map.t_visit_id
     WHERE t_visit.f_visit_status_id <> '4'
       AND t_visit.f_visit_type_id = '0'
-      AND substring(t_visit.visit_begin_visit_time,1,10) BETWEEN :startdate AND :enddate
+      AND substring(t_visit.visit_begin_visit_time,1,10) BETWEEN :start_date AND :end_date
       AND CAST(substring(t_visit.visit_begin_visit_time, 12, 8) AS TIME) BETWEEN '08:30:00' AND '16:30:00'
       AND t_visit_queue_map.b_visit_queue_setup_id = '3217538747849'
       AND NOT EXISTS (
