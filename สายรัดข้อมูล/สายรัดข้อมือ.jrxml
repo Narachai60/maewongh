@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.6.final using JasperReports Library version 6.20.6-5c96b6aa8a39ac1dc6b6bea4b81168e16dd39231  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="สายรัดข้อมือ" pageWidth="708" pageHeight="70" orientation="Landscape" whenNoDataType="NoPages" columnWidth="708" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="2fe7d0a9-e5ef-45c6-aacb-ffc9aeadc2b3">
+	<property name="ireport.scriptlethandling" value="0"/>
+	<property name="ireport.encoding" value="UTF-8"/>
+	<import value="net.sf.jasperreports.engine.*"/>
+	<import value="java.util.*"/>
+	<import value="net.sf.jasperreports.engine.data.*"/>
+	<parameter name="visit_id" class="java.lang.String" isForPrompting="false"/>
+	<queryString>
+		<![CDATA[SELECT
+     t_visit."visit_hn" AS Hn,
+     --t_visit."visit_vn" AS An,
+case when f_visit_type_id = '1' then t_visit."visit_vn" else '-' end as An,  
+     pf1.patient_prefix_description || ''|| t_health_family."patient_name" || ' '|| t_health_family."patient_last_name" AS name,
+substring(t_patient.patient_birthday, 9, 2)||'-'||substring(t_patient.patient_birthday, 6, 2) ||'-'||substring(t_patient.patient_birthday, 1, 4)as birthday
+--,CASE WHEN t_patient.patient_birthday <> '' then to_number(substring(' ' ||age(CURRENT_DATE, to_date(((to_number(substring(t_patient.patient_birthday, 1, 4), '9999') -543) || substring(t_patient.patient_birthday, 5, 6)), 'YYYY-MM-DD')) from '(...)year'), '999') end as year_age
+--,CASE WHEN t_patient.patient_birthday <> '' then to_number(substring(' ' ||age(CURRENT_DATE, to_date(((to_number(substring(t_patient.patient_birthday, 1, 4), '9999') -543) || substring(t_patient.patient_birthday, 5, 6)), 'YYYY-MM-DD')) from '(...)mons'), '999') end as mount_age
+--,CASE WHEN t_patient.patient_birthday <> '' then to_number(substring(' ' ||age(CURRENT_DATE, to_date(((to_number(substring(t_patient.patient_birthday, 1, 4), '9999') -543) || substring(t_patient.patient_birthday, 5, 6)), 'YYYY-MM-DD')) from '(...)day'), '999') end as day_age
+--คำสั่งด้านบนเป็นคำนวณอายุจากวันทางที่ปัจจุบันจร้า
+--,t_visit."visit_patient_age" as year_age
+,CASE WHEN t_patient.patient_birthday <> '' then substring(' ' ||age(to_date(((to_number(substring(t_visit.visit_begin_visit_time, 1, 4), '9999') -543) || substring(t_visit.visit_begin_visit_time, 5, 6)), 'YYYY-MM-DD')
+,to_date(((to_number(substring(t_patient.patient_birthday, 1, 4), '9999') -543) || substring(t_patient.patient_birthday, 5, 6)), 'YYYY-MM-DD'))from '(...)year') else '' end as year_age
+,CASE WHEN t_patient.patient_birthday <> '' then substring(' ' ||age(to_date(((to_number(substring(t_visit.visit_begin_visit_time, 1, 4), '9999') -543) || substring(t_visit.visit_begin_visit_time, 5, 6)), 'YYYY-MM-DD')
+,to_date(((to_number(substring(t_patient.patient_birthday, 1, 4), '9999') -543) || substring(t_patient.patient_birthday, 5, 6)), 'YYYY-MM-DD'))from '(...)mon')  else '' end as mount_age 
+,CASE WHEN t_patient.patient_birthday <> '' then substring(' ' ||age(to_date(((to_number(substring(t_visit.visit_begin_visit_time, 1, 4), '9999') -543) || substring(t_visit.visit_begin_visit_time, 5, 6)), 'YYYY-MM-DD')
+,to_date(((to_number(substring(t_patient.patient_birthday, 1, 4), '9999') -543) || substring(t_patient.patient_birthday, 5, 6)), 'YYYY-MM-DD'))from '(...)day')  else '' end as day_age
+,case when b_visit_ward."visit_ward_description" <> '' then b_visit_ward."visit_ward_description" else 'ผู้ป่วยนอก' end as ward,  
+--,b_visit_ward."visit_ward_description" as ward,
+case when b_visit_clinic."visit_clinic_description" <> '' then b_visit_clinic."visit_clinic_description" else '-' end as clinic, 
+--b_visit_clinic."visit_clinic_description" as clinic,
+case when t_visit."visit_bed" <> '' then t_visit."visit_bed" else '-' end as Bed,
+     --t_visit."visit_bed" AS Bed,
+     --t_visit_payment."b_contract_id" AS CardId,
+     t_health_family."patient_name" AS fname,
+     t_health_family."patient_last_name" AS lname,
+     t_health_family."patient_pid" AS pid,
+prefix1.patient_prefix_description || ''|| t_person.person_firstname ||' '|| t_person. person_lastname as doc_dx_staff
+		 ,TO_CHAR(t_patient.patient_birthday::DATE, 'DD/MM/YYYY') AS "วันเดือนปีเกิด",
+b1.employee_number as doc_number
+FROM
+     "t_patient" t_patient INNER JOIN "public"."t_visit" t_visit ON t_patient."t_patient_id" = t_visit."t_patient_id"
+     LEFT join f_patient_prefix as pf1 on t_patient.f_patient_prefix_id = pf1.f_patient_prefix_id
+     LEFT join  "public"."b_visit_ward" b_visit_ward on t_visit."b_visit_ward_id" = b_visit_ward."b_visit_ward_id"
+     INNER JOIN "public"."t_visit_payment" t_visit_payment ON t_visit."t_visit_id" = t_visit_payment."t_visit_id"
+     INNER JOIN "public"."t_health_family" t_health_family ON t_patient."t_health_family_id" = t_health_family."t_health_family_id"
+     LEFT join  "public"."b_visit_clinic" b_visit_clinic on t_visit."b_visit_clinic_id" = b_visit_clinic."b_visit_clinic_id"
+ LEFT JOIN b_employee as b1 ON t_visit.visit_patient_self_doctor = b1.b_employee_id
+     left join t_person on (t_person.t_person_id = b1.t_person_id and t_person.active = '1') 
+      LEFT JOIN f_patient_prefix as prefix1 on t_person.f_prefix_id = prefix1.f_patient_prefix_id
+WHERE
+     t_visit.t_visit_id  = $P{visit_id}
+
+ -- t_visit.t_visit_id = '255112208778991920']]>
+	</queryString>
+	<field name="hn" class="java.lang.String"/>
+	<field name="an" class="java.lang.String"/>
+	<field name="name" class="java.lang.String"/>
+	<field name="birthday" class="java.lang.String"/>
+	<field name="year_age" class="java.lang.String"/>
+	<field name="mount_age" class="java.lang.String"/>
+	<field name="day_age" class="java.lang.String"/>
+	<field name="ward" class="java.lang.String"/>
+	<field name="clinic" class="java.lang.String"/>
+	<field name="bed" class="java.lang.String"/>
+	<field name="fname" class="java.lang.String"/>
+	<field name="lname" class="java.lang.String"/>
+	<field name="pid" class="java.lang.String"/>
+	<field name="doc_dx_staff" class="java.lang.String"/>
+	<field name="วันเดือนปีเกิด" class="java.lang.String"/>
+	<field name="doc_number" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band splitType="Stretch"/>
+	</columnHeader>
+	<detail>
+		<band height="70" splitType="Stretch">
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-1" x="197" y="4" width="149" height="26" uuid="7bbc5edb-c86e-4553-b8be-ade5b4476bab"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="18" isBold="true" isItalic="false" isStrikeThrough="false" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ชื่อ : "+$F{name}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-3" x="197" y="18" width="90" height="22" uuid="8ee2e773-da78-4af0-8ff9-0c0233106756"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left">
+					<font fontName="TH SarabunPSK" size="18" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA["HN: "+$F{hn}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-5" x="197" y="47" width="155" height="20" uuid="b32b5f93-5387-45dc-a83d-89699f3e59a5"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA["อายุ : "+$F{year_age}+" ปี  " +$F{mount_age}+" เดือน  "+$F{day_age} +" วัน"]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-6" x="197" y="35" width="149" height="20" uuid="a3a854ca-767b-4d87-bac1-7c4adfc038f7"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="TH SarabunPSK" size="16" isBold="true" isItalic="false" isStrikeThrough="false" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA["วันเกิด : "+$F{วันเดือนปีเกิด}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement key="staticText-1" mode="Opaque" x="93" y="4" width="34" height="62" forecolor="#030303" backcolor="#FFFFFF" uuid="f07b1afc-b81d-4941-ae11-7a31646b5b76"/>
+				<box topPadding="0" leftPadding="0" bottomPadding="0" rightPadding="0">
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#030303"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#030303"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle" rotation="Left">
+					<font fontName="TH SarabunPSK" size="10" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<text><![CDATA[โรงพยาบาลแม่วงก์
+056-238012]]></text>
+			</staticText>
+			<componentElement>
+				<reportElement x="128" y="1" width="64" height="58" uuid="ad5eb285-73dc-49c8-a7ae-eab6761b7439"/>
+				<jr:QRCode xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<jr:codeExpression><![CDATA[$F{an}]]></jr:codeExpression>
+				</jr:QRCode>
+			</componentElement>
+			<textField isBlankWhenNull="false">
+				<reportElement key="textField-4" x="128" y="52" width="65" height="15" uuid="e62dc999-4847-4148-92b6-deffa4fb978d"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font fontName="TH SarabunPSK" size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+				</textElement>
+				<textFieldExpression><![CDATA["AN: "+$F{an}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Prevent"/>
+	</summary>
+</jasperReport>
