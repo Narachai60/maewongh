@@ -1,0 +1,67 @@
+SELECT DISTINCT
+t_visit.visit_hn
+--,t_visit.visit_vn
+,string_agg(distinct q1.diag_icd10_number, ', ') as icd10
+--,min(t_diag_icd10.diag_icd10_record_date_time) as fist_dx
+--,t_visit.visit_dx
+--,t_diag_icd9.diag_icd9_icd9_number
+    , 'เลขที่' || ' ' ||patient_house as บ้านเลขที่
+     ,'หมู่.' ||patient_moo as หมู่
+    ,'ต.' || f1.address_description as ตำบล
+    , 'อ.' ||  f2.address_description as อำเภอ
+    , 'จ.' ||   f3.address_description  as จังหวัด 
+,max(CASE when t_visit.f_visit_ipd_discharge_status_id = '9' then t_visit.f_visit_ipd_discharge_status_id  else '' end) as death
+
+from t_visit
+LEFT JOIN t_patient on t_visit.t_patient_id = t_patient.t_patient_id
+inner JOIN (
+SELECT DISTINCT
+t_patient.patient_hn
+--,t_diag_icd10.diag_icd10_vn
+,t_diag_icd10.diag_icd10_number
+,t_diag_icd10.f_diag_icd10_type_id
+,min(t_diag_icd10.diag_icd10_record_date_time) as f_dx
+
+FROM t_patient
+LEFT JOIN t_visit on t_patient.t_patient_id = t_visit.t_patient_id
+LEFT JOIN t_diag_icd10 on t_visit.t_visit_id = t_diag_icd10.diag_icd10_vn
+
+WHERE t_diag_icd10.diag_icd10_number between 'Z72%' and 'Z72.2%'
+and t_diag_icd10.f_diag_icd10_type_id = '1'
+AND t_diag_icd10.diag_icd10_active = '1'
+
+GROUP BY 
+t_patient.patient_hn
+--t_diag_icd10.diag_icd10_vn
+,t_diag_icd10.diag_icd10_number
+,t_diag_icd10.f_diag_icd10_type_id
+
+
+ORDER BY t_patient.patient_hn desc
+)as q1 on q1.patient_hn = t_visit.visit_hn
+--LEFT JOIN t_diag_icd9 on t_visit.t_visit_id = t_diag_icd9.diag_icd9_vn
+left join f_address as f1 on t_patient.patient_tambon = f1.f_address_id
+left join f_address as f2 on t_patient.patient_amphur = f2.f_address_id
+left join f_address as f3 on t_patient.patient_changwat = f3.f_address_id 
+
+WHERE  substring(q1.f_dx,1,10) Between substring('2566-10-01',1,10) and substring('2567-09-31',1,10)
+and t_visit.visit_begin_visit_time Between substring('2566-10-01',1,10) and substring('2567-09-31',1,10)
+
+and t_visit.f_visit_status_id <> '4'
+--and t_diag_icd10.diag_icd10_number like 'I21%'
+--and q1.diag_icd10_number between 'I60%' and 'I69%'
+--and t_diag_icd10.f_diag_icd10_type_id = '1'
+--AND t_diag_icd10.diag_icd10_active = '1'
+--and t_visit.visit_doctor_discharge_status = ''
+--and t_diag_icd9.diag_icd9_active = '1'
+-- and (f2.address_description like '%คลองลาน%' or f2.address_description like '%ปางศิลาทอง%' or f2.address_description like '%%' or f2.address_description like '%%' or f2.address_description like '%%' or f2.address_description like '%%')
+GROUP BY
+t_visit.visit_hn
+    ,บ้านเลขที่
+     ,หมู่
+    ,ตำบล
+    ,อำเภอ
+    ,จังหวัด 
+--,t_visit.f_visit_ipd_discharge_status_id 
+--,t_visit.visit_dx
+ORDER BY visit_hn desc
