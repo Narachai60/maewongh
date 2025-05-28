@@ -148,7 +148,7 @@ ON ("t_diag_icd10"."diag_icd10_vn" = "t_visit"."t_visit_id"  and "t_diag_icd10".
 left  JOIN b_employee on t_diag_icd10.diag_icd10_staff_doctor = b_employee.b_employee_id
 left join t_person as per1 on (per1.t_person_id = b_employee.t_person_id and per1.active = '1')
 left join b_service_point on b_employee.b_service_point_id=b_service_point.b_service_point_id
-LEFT JOIN b_employee as b1 ON t_visit.ipd_discharge_doctor = b1.b_employee_id
+LEFT JOIN b_employee as b1 ON t_visit.visit_patient_self_doctor = b1.b_employee_id
 left join t_person as per2 on (per2.t_person_id = b1.t_person_id and per2.active = '1')
 LEFT JOIN f_patient_prefix as prefix1 on per2.f_prefix_id = prefix1.f_patient_prefix_id
 ,b_site 
