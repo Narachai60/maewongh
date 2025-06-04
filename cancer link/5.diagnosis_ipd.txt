@@ -1,0 +1,37 @@
+SELECT DISTINCT
+(SELECT b_visit_office_id FROM b_site) AS hospcode
+,t_visit.visit_hn as hn
+,t_visit.visit_vn as an
+,t_diag_icd10.diag_icd10_number as icd10
+,t_diag_icd10.f_diag_icd10_type_id as diag_type
+
+from t_visit	
+left join t_patient on t_visit.t_patient_id =t_patient.t_patient_id
+LEFT JOIN t_diag_icd10 on t_visit.t_visit_id = t_diag_icd10.diag_icd10_vn and t_diag_icd10.diag_icd10_active ='1'
+
+
+
+
+WHERE 
+NOT (
+    SUBSTRING(t_visit.visit_begin_visit_time, 6, 5) = '02-29'
+  )
+	and (to_date(SUBSTRING(t_visit.visit_begin_visit_time, 1, 10), 'YYYY-MM-DD') - INTERVAL '543 years') BETWEEN '2025-01-01' and '2025-04-30'
+  AND t_visit.f_visit_status_id <> '4'
+  AND t_diag_icd10.f_diag_icd10_type_id = '1' 
+	and t_visit.f_visit_type_id = '1'
+	and (
+	t_diag_icd10.diag_icd10_number like 'Z01.4' or
+	t_diag_icd10.diag_icd10_number like 'Z12.4' or
+	t_diag_icd10.diag_icd10_number like 'R87%' or
+	t_diag_icd10.diag_icd10_number like 'D06%' or
+	t_diag_icd10.diag_icd10_number like 'C53%' or
+	t_diag_icd10.diag_icd10_number like 'Z12.1' or
+	t_diag_icd10.diag_icd10_number like 'K63.5' or
+	t_diag_icd10.diag_icd10_number like 'K57.3' or
+	t_diag_icd10.diag_icd10_number like 'K51%' or
+	t_diag_icd10.diag_icd10_number like 'C18%' or
+	t_diag_icd10.diag_icd10_number like 'C20%' or
+	t_diag_icd10.diag_icd10_number like 'C50%' or
+	t_diag_icd10.diag_icd10_number like 'C24%' or
+	t_diag_icd10.diag_icd10_number like 'C22%' )

@@ -1,0 +1,43 @@
+SELECT DISTINCT
+(SELECT b_visit_office_id FROM b_site) AS hospcode
+,t_visit.visit_hn as hn
+,t_patient.patient_pid as cid
+,case when t_patient.f_patient_prefix_id in ('003','004','005') then t_patient.f_patient_prefix_id ELSE '129' end as title
+,t_patient.patient_firstname as firstname
+,t_patient.patient_lastname as lastname
+,(to_date(SUBSTRING(t_patient.patient_birthday, 1, 10), 'YYYY-MM-DD') - INTERVAL '543 years') as birth_date
+,t_patient.f_sex_id as sex
+,f_patient_nation.r_rp1853_nation_id AS nationality
+,t_patient.patient_house as address_no
+,t_patient.patient_moo as address_moo
+,SUBSTRING(t_patient.patient_tambon, 5, 2) as subdistrict
+,SUBSTRING(t_patient.patient_amphur, 3, 2) as district
+,SUBSTRING(t_patient.patient_changwat, 1, 2) as province
+,t_patient.patient_phone_number as telephone
+
+from t_visit	
+left join t_patient on t_visit.t_patient_id =t_patient.t_patient_id
+LEFT JOIN t_diag_icd10 on t_visit.t_visit_id = t_diag_icd10.diag_icd10_vn and t_diag_icd10.diag_icd10_active ='1'
+LEFT JOIN f_patient_nation on t_patient.f_patient_nation_id = f_patient_nation.f_patient_nation_id
+WHERE 
+NOT (
+    SUBSTRING(t_visit.visit_begin_visit_time, 6, 5) = '02-29'
+  )
+	and (to_date(SUBSTRING(t_visit.visit_begin_visit_time, 1, 10), 'YYYY-MM-DD') - INTERVAL '543 years') BETWEEN '2025-01-01' and '2025-04-30'
+  AND t_visit.f_visit_status_id <> '4'
+  AND t_diag_icd10.f_diag_icd10_type_id = '1' 
+	and (
+	t_diag_icd10.diag_icd10_number like 'Z01.4' or
+	t_diag_icd10.diag_icd10_number like 'Z12.4' or
+	t_diag_icd10.diag_icd10_number like 'R87%' or
+	t_diag_icd10.diag_icd10_number like 'D06%' or
+	t_diag_icd10.diag_icd10_number like 'C53%' or
+	t_diag_icd10.diag_icd10_number like 'Z12.1' or
+	t_diag_icd10.diag_icd10_number like 'K63.5' or
+	t_diag_icd10.diag_icd10_number like 'K57.3' or
+	t_diag_icd10.diag_icd10_number like 'K51%' or
+	t_diag_icd10.diag_icd10_number like 'C18%' or
+	t_diag_icd10.diag_icd10_number like 'C20%' or
+	t_diag_icd10.diag_icd10_number like 'C50%' or
+	t_diag_icd10.diag_icd10_number like 'C24%' or
+	t_diag_icd10.diag_icd10_number like 'C22%' )
