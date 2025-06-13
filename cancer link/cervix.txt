@@ -1,0 +1,233 @@
+SELECT DISTINCT
+  'cervix' AS screening
+, TO_CHAR(CURRENT_DATE, 'YYYY') AS target_year
+, (SELECT b_visit_office_id FROM b_site) AS hospcode
+, t_patient.patient_pid AS cid
+, NULL AS group_no
+, f_patient_prefix.patient_prefix_description AS title
+, t_patient.patient_firstname AS firstname
+, t_patient.patient_lastname AS lastname
+, t_patient.patient_hn AS hn
+, patient_moo AS address_moo
+, f1.address_description AS subdistrict
+, f2.address_description AS district
+, f3.address_description AS province
+, t_patient.patient_phone_number AS telephone
+
+-- แปลงวันเกิด พ.ศ. เป็น ค.ศ. แบบปลอดภัยเก็บใน subquery 
+, CASE 
+    WHEN t_patient.patient_birthday IS NOT NULL THEN 
+      EXTRACT(
+        YEAR FROM AGE(
+          CURRENT_DATE,
+          CASE 
+            -- แปลงปีในสตริงก่อนเพื่อป้องกันวันที่ไม่ถูกต้อง
+            WHEN EXTRACT(MONTH FROM (
+                  to_date(
+                    CONCAT(
+                      (CAST(SUBSTRING(t_patient.patient_birthday::TEXT, 1, 4) AS INT) - 543)::TEXT,
+                      SUBSTRING(t_patient.patient_birthday::TEXT, 5, 6)
+                    ),
+                    'YYYY-MM-DD'
+                  )
+                )) = 2
+             AND EXTRACT(DAY FROM (
+                  to_date(
+                    CONCAT(
+                      (CAST(SUBSTRING(t_patient.patient_birthday::TEXT, 1, 4) AS INT) - 543)::TEXT,
+                      SUBSTRING(t_patient.patient_birthday::TEXT, 5, 6)
+                    ),
+                    'YYYY-MM-DD'
+                  )
+                )) = 29
+             AND NOT (
+               (EXTRACT(YEAR FROM CURRENT_DATE)::INT % 4 = 0)
+               AND ((EXTRACT(YEAR FROM CURRENT_DATE)::INT % 100 <> 0) OR (EXTRACT(YEAR FROM CURRENT_DATE)::INT % 400 = 0))
+             )
+            THEN to_date(
+                   CONCAT(
+                     (CAST(SUBSTRING(t_patient.patient_birthday::TEXT, 1, 4) AS INT) - 543)::TEXT,
+                     SUBSTRING(t_patient.patient_birthday::TEXT, 5, 6)
+                   ),
+                   'YYYY-MM-DD'
+                 ) - INTERVAL '1 day'
+            ELSE to_date(
+                   CONCAT(
+                     (CAST(SUBSTRING(t_patient.patient_birthday::TEXT, 1, 4) AS INT) - 543)::TEXT,
+                     SUBSTRING(t_patient.patient_birthday::TEXT, 5, 6)
+                   ),
+                   'YYYY-MM-DD'
+                 )
+          END
+        )
+      )::TEXT
+    ELSE '' 
+  END AS age_y
+
+, CASE 
+    WHEN t_patient.patient_birthday IS NOT NULL THEN 
+      EXTRACT(
+        MONTH FROM AGE(
+          CURRENT_DATE,
+          CASE 
+            WHEN EXTRACT(MONTH FROM (
+                  to_date(
+                    CONCAT(
+                      (CAST(SUBSTRING(t_patient.patient_birthday::TEXT, 1, 4) AS INT) - 543)::TEXT,
+                      SUBSTRING(t_patient.patient_birthday::TEXT, 5, 6)
+                    ),
+                    'YYYY-MM-DD'
+                  )
+                )) = 2
+             AND EXTRACT(DAY FROM (
+                  to_date(
+                    CONCAT(
+                      (CAST(SUBSTRING(t_patient.patient_birthday::TEXT, 1, 4) AS INT) - 543)::TEXT,
+                      SUBSTRING(t_patient.patient_birthday::TEXT, 5, 6)
+                    ),
+                    'YYYY-MM-DD'
+                  )
+                )) = 29
+             AND NOT (
+               (EXTRACT(YEAR FROM CURRENT_DATE)::INT % 4 = 0)
+               AND ((EXTRACT(YEAR FROM CURRENT_DATE)::INT % 100 <> 0) OR (EXTRACT(YEAR FROM CURRENT_DATE)::INT % 400 = 0))
+             )
+            THEN to_date(
+                   CONCAT(
+                     (CAST(SUBSTRING(t_patient.patient_birthday::TEXT, 1, 4) AS INT) - 543)::TEXT,
+                     SUBSTRING(t_patient.patient_birthday::TEXT, 5, 6)
+                   ),
+                   'YYYY-MM-DD'
+                 ) - INTERVAL '1 day'
+            ELSE to_date(
+                   CONCAT(
+                     (CAST(SUBSTRING(t_patient.patient_birthday::TEXT, 1, 4) AS INT) - 543)::TEXT,
+                     SUBSTRING(t_patient.patient_birthday::TEXT, 5, 6)
+                   ),
+                   'YYYY-MM-DD'
+                 )
+          END
+        )
+      )::TEXT
+    ELSE '' 
+  END AS age_m
+
+, CASE 
+    WHEN t_patient.patient_birthday IS NOT NULL THEN 
+      EXTRACT(
+        DAY FROM AGE(
+          CURRENT_DATE,
+          CASE 
+            WHEN EXTRACT(MONTH FROM (
+                  to_date(
+                    CONCAT(
+                      (CAST(SUBSTRING(t_patient.patient_birthday::TEXT, 1, 4) AS INT) - 543)::TEXT,
+                      SUBSTRING(t_patient.patient_birthday::TEXT, 5, 6)
+                    ),
+                    'YYYY-MM-DD'
+                  )
+                )) = 2
+             AND EXTRACT(DAY FROM (
+                  to_date(
+                    CONCAT(
+                      (CAST(SUBSTRING(t_patient.patient_birthday::TEXT, 1, 4) AS INT) - 543)::TEXT,
+                      SUBSTRING(t_patient.patient_birthday::TEXT, 5, 6)
+                    ),
+                    'YYYY-MM-DD'
+                  )
+                )) = 29
+             AND NOT (
+               (EXTRACT(YEAR FROM CURRENT_DATE)::INT % 4 = 0)
+               AND ((EXTRACT(YEAR FROM CURRENT_DATE)::INT % 100 <> 0) OR (EXTRACT(YEAR FROM CURRENT_DATE)::INT % 400 = 0))
+             )
+            THEN to_date(
+                   CONCAT(
+                     (CAST(SUBSTRING(t_patient.patient_birthday::TEXT, 1, 4) AS INT) - 543)::TEXT,
+                     SUBSTRING(t_patient.patient_birthday::TEXT, 5, 6)
+                   ),
+                   'YYYY-MM-DD'
+                 ) - INTERVAL '1 day'
+            ELSE to_date(
+                   CONCAT(
+                     (CAST(SUBSTRING(t_patient.patient_birthday::TEXT, 1, 4) AS INT) - 543)::TEXT,
+                     SUBSTRING(t_patient.patient_birthday::TEXT, 5, 6)
+                   ),
+                   'YYYY-MM-DD'
+                 )
+          END
+        )
+      )::TEXT
+    ELSE '' 
+  END AS age_d
+
+, t_patient.patient_birthday AS birthdate
+, NULL as screening_previous
+
+FROM t_visit
+LEFT JOIN t_patient ON t_visit.t_patient_id = t_patient.t_patient_id
+LEFT JOIN t_death ON t_patient.t_patient_id = t_death.t_patient_id AND t_death.death_active = '1'
+LEFT JOIN f_address AS f1 ON t_patient.patient_contact_tambon = f1.f_address_id
+LEFT JOIN f_address AS f2 ON t_patient.patient_contact_amphur = f2.f_address_id
+LEFT JOIN f_address AS f3 ON t_patient.patient_contact_changwat = f3.f_address_id 
+LEFT JOIN t_diag_icd10 ON t_visit.t_visit_id = t_diag_icd10.diag_icd10_vn AND t_diag_icd10.diag_icd10_active = '1'
+LEFT JOIN t_health_specialpp ON t_visit.t_visit_id = t_health_specialpp.t_visit_id AND t_health_specialpp.active = '1'
+LEFT JOIN f_patient_prefix ON f_patient_prefix.f_patient_prefix_id = t_patient.f_patient_prefix_id
+
+WHERE NOT (
+    SUBSTRING(t_visit.visit_begin_visit_time, 6, 5) = '02-29'
+  )
+  AND (to_date(SUBSTRING(t_visit.visit_begin_visit_time, 1, 10), 'YYYY-MM-DD') - INTERVAL '543 years')::DATE 
+      >= CURRENT_DATE - INTERVAL '5 years'
+  AND t_visit.f_visit_status_id <> '4'
+  AND t_diag_icd10.f_diag_icd10_type_id = '1' 
+  AND t_death.t_death_id IS NULL
+	and t_diag_icd10.diag_icd10_number not like 'C53%'
+	and t_health_specialpp.f_specialpp_code_id not like '1B0046'
+	and t_patient.f_patient_nation_id = '99'
+	and t_patient.patient_pid <> ''
+	
+  AND (
+    EXTRACT(
+      YEAR FROM AGE(
+        CURRENT_DATE,
+        CASE 
+          WHEN EXTRACT(MONTH FROM (
+                to_date(
+                  CONCAT(
+                    (CAST(SUBSTRING(t_patient.patient_birthday::TEXT, 1, 4) AS INT) - 543)::TEXT,
+                    SUBSTRING(t_patient.patient_birthday::TEXT, 5, 6)
+                  ),
+                  'YYYY-MM-DD'
+                )
+              )) = 2
+           AND EXTRACT(DAY FROM (
+                to_date(
+                  CONCAT(
+                    (CAST(SUBSTRING(t_patient.patient_birthday::TEXT, 1, 4) AS INT) - 543)::TEXT,
+                    SUBSTRING(t_patient.patient_birthday::TEXT, 5, 6)
+                  ),
+                  'YYYY-MM-DD'
+                )
+              )) = 29
+           AND NOT (
+             (EXTRACT(YEAR FROM CURRENT_DATE)::INT % 4 = 0)
+             AND ((EXTRACT(YEAR FROM CURRENT_DATE)::INT % 100 <> 0) OR (EXTRACT(YEAR FROM CURRENT_DATE)::INT % 400 = 0))
+           )
+          THEN to_date(
+                 CONCAT(
+                   (CAST(SUBSTRING(t_patient.patient_birthday::TEXT, 1, 4) AS INT) - 543)::TEXT,
+                   SUBSTRING(t_patient.patient_birthday::TEXT, 5, 6)
+                 ),
+                 'YYYY-MM-DD'
+               ) - INTERVAL '1 day'
+          ELSE to_date(
+                 CONCAT(
+                   (CAST(SUBSTRING(t_patient.patient_birthday::TEXT, 1, 4) AS INT) - 543)::TEXT,
+                   SUBSTRING(t_patient.patient_birthday::TEXT, 5, 6)
+                 ),
+                 'YYYY-MM-DD'
+               )
+        END
+      )
+    ) BETWEEN 30 AND 59
+  )

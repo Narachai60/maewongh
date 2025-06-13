@@ -1,0 +1,15 @@
+SELECT DISTINCT
+(SELECT b_visit_office_id from b_site) as hospcode
+,t_patient.patient_pid as cid
+,(to_date(substring(t_visit.visit_begin_visit_time, 1, 10), 'YYYY-MM-DD') - interval '543 years')::date AS vstdate
+,t_health_specialpp.f_specialpp_code_id as pp_code
+FROM t_visit
+LEFT JOIN t_health_specialpp on t_visit.t_visit_id = t_health_specialpp.t_visit_id
+LEFT JOIN t_patient on t_visit.t_patient_id = t_patient.t_patient_id
+WHERE 
+--substring(t_visit.visit_begin_visit_time,1,10) between substring('2563-01-01',1,10) and substring('2568-12-31',1,10)
+(to_date(substring(t_visit.visit_begin_visit_time, 1, 10), 'YYYY-MM-DD') - interval '543 years')::date 
+  >= current_date - interval '5 years'
+and t_visit.f_visit_status_id <> '4'
+and t_health_specialpp.active = '1'
+and t_health_specialpp.f_specialpp_code_id in ('1B0046', '1B0060', '1B0061')
