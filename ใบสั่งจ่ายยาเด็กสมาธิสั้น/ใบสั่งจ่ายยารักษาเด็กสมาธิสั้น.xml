@@ -82,7 +82,7 @@ q1.doc_name
       COALESCE(q1.หน่วยใช้จ่าย, '')
   END,
   ' | '
-) AS รายละเอียดรวม
+) AS รายละเอียด
 
 
 from
@@ -227,7 +227,7 @@ q1.doc_name
 	<field name="datevisit" class="java.lang.String"/>
 	<field name="dateorder" class="java.lang.String"/>
 	<field name="namedrug" class="java.lang.String"/>
-	<field name="รายละเอียดรวม" class="java.lang.String"/>
+	<field name="รายละเอียด" class="java.lang.String"/>
 
 		<background>
 			<band height="0"  isSplitAllowed="true" >
