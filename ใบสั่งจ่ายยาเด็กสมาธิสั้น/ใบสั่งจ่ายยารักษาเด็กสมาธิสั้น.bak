@@ -68,22 +68,8 @@ q1.doc_name
 ,q1.datevisit
 ,q1.dateorder
 ,q1.namedrug
-,string_agg(
-  CASE 
-    WHEN q1.สถานะdrug_special = '0' THEN 
-      COALESCE(q1.จำนวนที่ใช้::text, '') || ' ' || 
-      COALESCE(q1.หน่วยใช้, '') || ' X ' || 
-      COALESCE(q1.ช่วงเวลาใช้ยา, '') || ' ' || 
-      COALESCE(q1.จำนวนจ่าย::text, '') || ' ' || 
-      COALESCE(q1.หน่วยใช้จ่าย, '')
-    ELSE 
-      REPLACE(COALESCE(q1.drug_special, ''), E'\n', ' ') || ' ' || 
-      COALESCE(q1.จำนวนจ่าย::text, '') || ' ' || 
-      COALESCE(q1.หน่วยใช้จ่าย, '')
-  END,
-  ' | '
-) AS รายละเอียดรวม
-
+,case when q1.สถานะdrug_special = '0' then q1.จำนวนที่ใช้||' '||q1.หน่วยใช้||' X '||q1.ช่วงเวลาใช้ยา||' '||q1.จำนวนจ่าย||' '||q1.หน่วยใช้จ่าย
+else q1.drug_special||' '||q1.จำนวนจ่าย||' '||q1.หน่วยใช้จ่าย end as รายละเอียด   
 
 from
 (select distinct 
@@ -148,7 +134,7 @@ left join f_address as f7 on b_site.site_changwat = f7.f_address_id
 
 where 
  t_visit.t_visit_id =$P{visit_id}
- --t_visit.t_visit_id = '25511220161294512444513981'
+ --t_visit.t_visit_id = '25511220174830668422030248'
 and t_order.f_order_status_id <> '3'
 and t_order.b_item_id in ('174112202467941045','17411220167403136109022600','17411220174910906209936276','17411220167403136109022600')
 -- and t_order.b_item_id ='17411220167403136109022600'
@@ -185,28 +171,7 @@ t_order.order_common_name
 ,f_patient_education_type.patient_education_type_description
 ,t_visit.visit_dx
 ,t_visit.visit_begin_visit_time
-) as q1
-
-GROUP BY 
-q1.doc_name
-,q1.num
-,q1.hospital
-,q1.provice
-,q1.HN
-,q1.patient_name
-,q1.patient_age
-,q1.house 
-,q1.moo 
-,q1.tum 
-,q1.aum
-,q1.jang
-,q1.pid
-,q1.occupation 
-,q1.education 
-,q1.dx
-,q1.datevisit
-,q1.dateorder
-,q1.namedrug]]></queryString>
+) as q1]]></queryString>
 
 	<field name="doc_name" class="java.lang.String"/>
 	<field name="num" class="java.lang.String"/>
@@ -227,7 +192,7 @@ q1.doc_name
 	<field name="datevisit" class="java.lang.String"/>
 	<field name="dateorder" class="java.lang.String"/>
 	<field name="namedrug" class="java.lang.String"/>
-	<field name="รายละเอียดรวม" class="java.lang.String"/>
+	<field name="รายละเอียด" class="java.lang.String"/>
 
 		<background>
 			<band height="0"  isSplitAllowed="true" >
