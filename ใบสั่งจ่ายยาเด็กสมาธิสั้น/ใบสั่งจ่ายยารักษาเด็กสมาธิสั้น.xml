@@ -136,7 +136,7 @@ where
  t_visit.t_visit_id =$P{visit_id}
  --t_visit.t_visit_id = '25511220174830668422030248'
 and t_order.f_order_status_id <> '3'
-and t_order.b_item_id in ('174112202467941045','17411220167403136109022600')
+and t_order.b_item_id in ('174112202467941045','17411220167403136109022600','17411220174910906209936276','17411220167403136109022600')
 -- and t_order.b_item_id ='17411220167403136109022600'
 and t_order_drug.order_drug_active = '1'
 
