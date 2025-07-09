@@ -5,7 +5,7 @@ SELECT DISTINCT
 ,case when t_patient.f_patient_prefix_id in ('003','004','005') then t_patient.f_patient_prefix_id ELSE '129' end as title
 ,t_patient.patient_firstname as firstname
 ,t_patient.patient_lastname as lastname
-,(to_date(SUBSTRING(t_patient.patient_birthday, 1, 10), 'YYYY-MM-DD') - INTERVAL '543 years') as birth_date
+,to_char((to_date(SUBSTRING(t_patient.patient_birthday, 1, 10), 'YYYY-MM-DD') - INTERVAL '543 years'),'YYYY-MM-DD') as birth_date
 ,t_patient.f_sex_id as sex
 ,f_patient_nation.r_rp1853_nation_id AS nationality
 ,t_patient.patient_house as address_no

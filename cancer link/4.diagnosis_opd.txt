@@ -1,37 +1,57 @@
 SELECT DISTINCT
-(SELECT b_visit_office_id FROM b_site) AS hospcode
-,t_visit.visit_hn as hn
-,t_visit.visit_vn as vn
-,t_diag_icd10.diag_icd10_number as icd10
-,t_diag_icd10.f_diag_icd10_type_id as diag_type
-
-from t_visit	
-left join t_patient on t_visit.t_patient_id =t_patient.t_patient_id
-LEFT JOIN t_diag_icd10 on t_visit.t_visit_id = t_diag_icd10.diag_icd10_vn and t_diag_icd10.diag_icd10_active ='1'
-
-
-
-
-WHERE 
-NOT (
-    SUBSTRING(t_visit.visit_begin_visit_time, 6, 5) = '02-29'
-  )
-	and (to_date(SUBSTRING(t_visit.visit_begin_visit_time, 1, 10), 'YYYY-MM-DD') - INTERVAL '543 years') BETWEEN '2025-01-01' and '2025-04-30'
-  AND t_visit.f_visit_status_id <> '4'
+    (SELECT b_visit_office_id FROM b_site) AS hospcode,
+    t_visit.visit_hn AS hn,
+    t_visit.visit_vn AS vn,
+    code_union.icd10,
+    code_union.diag_type
+FROM t_visit
+LEFT JOIN t_patient 
+    ON t_visit.t_patient_id = t_patient.t_patient_id
+LEFT JOIN t_diag_icd10
+    ON t_visit.t_visit_id = t_diag_icd10.diag_icd10_vn 
+    AND t_diag_icd10.diag_icd10_active = '1'
+LEFT JOIN t_diag_icd10 AS sub_dx
+    ON t_visit.t_visit_id = sub_dx.diag_icd10_vn 
+    AND sub_dx.diag_icd10_active = '1'
+CROSS JOIN LATERAL (
+    SELECT DISTINCT
+        code, code_type
+    FROM (
+        SELECT 
+            t_diag_icd10.diag_icd10_number AS code,
+            t_diag_icd10.f_diag_icd10_type_id AS code_type
+        UNION
+        SELECT 
+            sub_dx.diag_icd10_number AS code,
+            sub_dx.f_diag_icd10_type_id AS code_type
+    ) AS codes
+    WHERE code IS NOT NULL
+) AS code_union(icd10, diag_type)
+WHERE
+    NOT (SUBSTRING(t_visit.visit_begin_visit_time, 6, 5) = '02-29')
+     and (to_date(SUBSTRING(t_visit.visit_begin_visit_time, 1, 10), 'YYYY-MM-DD') - INTERVAL '543 years') = CAST($1 AS DATE) -- แทนค่าวันที่โดยตรง
+		--AND (to_date(SUBSTRING(t_visit.visit_begin_visit_time, 1, 10), 'YYYY-MM-DD') - INTERVAL '543 years') BETWEEN '2025-01-01' AND '2025-04-30'
+    AND t_visit.f_visit_status_id <> '4'
+    AND t_visit.f_visit_type_id = '0'
   AND t_diag_icd10.f_diag_icd10_type_id = '1' 
-	and t_visit.f_visit_type_id = '0'
-	and (
-	t_diag_icd10.diag_icd10_number like 'Z01.4' or
-	t_diag_icd10.diag_icd10_number like 'Z12.4' or
-	t_diag_icd10.diag_icd10_number like 'R87%' or
-	t_diag_icd10.diag_icd10_number like 'D06%' or
-	t_diag_icd10.diag_icd10_number like 'C53%' or
-	t_diag_icd10.diag_icd10_number like 'Z12.1' or
-	t_diag_icd10.diag_icd10_number like 'K63.5' or
-	t_diag_icd10.diag_icd10_number like 'K57.3' or
-	t_diag_icd10.diag_icd10_number like 'K51%' or
-	t_diag_icd10.diag_icd10_number like 'C18%' or
-	t_diag_icd10.diag_icd10_number like 'C20%' or
-	t_diag_icd10.diag_icd10_number like 'C50%' or
-	t_diag_icd10.diag_icd10_number like 'C24%' or
-	t_diag_icd10.diag_icd10_number like 'C22%' )
+ and t_visit.f_visit_type_id = '0'
+ and (
+    -- cervix --
+    t_diag_icd10.diag_icd10_number = 'Z01.4'
+    or t_diag_icd10.diag_icd10_number like 'R87%'
+    or t_diag_icd10.diag_icd10_number like 'N87%'
+    or t_diag_icd10.diag_icd10_number like 'D06%'
+    -- colon --
+    or t_diag_icd10.diag_icd10_number = 'K63.5'
+    or t_diag_icd10.diag_icd10_number = 'K57.3'
+    or t_diag_icd10.diag_icd10_number like 'K51%'
+    -- breast --
+    or t_diag_icd10.diag_icd10_number = 'Z01.6'
+    or t_diag_icd10.diag_icd10_number = 'N63%'
+    -- all screeing --
+    or t_diag_icd10.diag_icd10_number like 'Z12%'
+    -- all cancer --
+    or t_diag_icd10.diag_icd10_number like 'C%'
+ )
+  AND t_diag_icd10.diag_icd10_number ~ '^[A-Z]'
+ORDER BY hn, vn, icd10
