@@ -9,98 +9,119 @@ FROM (
         'YYYY-MM'
       ) AS vstmonth,
 
-      /* เวลามาถึง -> เริ่มคัดกรอง */
-      TO_CHAR(
-        make_interval(secs => AVG(EXTRACT(EPOCH FROM (
-          TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS') -
-          TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
-      )))), 'HH24:MI') AS visit_screen,
-
-      /* เวลาคัดกรอง */
+      /* มาถึง -> เริ่มคัดกรอง (วันเดียวกัน + ปลาย > ต้น) */
       TO_CHAR(
         make_interval(secs => AVG(
           CASE
-            WHEN NULLIF(q1.opd_begin, '') IS NOT NULL AND NULLIF(q1.opd_end, '') IS NOT NULL
-                 AND TO_TIMESTAMP(NULLIF(q1.opd_end, ''), 'YYYY-MM-DD HH24:MI:SS') >
-                     TO_TIMESTAMP(NULLIF(q1.opd_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
-            THEN GREATEST(EXTRACT(EPOCH FROM (
-              TO_TIMESTAMP(NULLIF(q1.opd_end, ''), 'YYYY-MM-DD HH24:MI:SS') -
-              TO_TIMESTAMP(NULLIF(q1.opd_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
-            )), 0)
+            WHEN NULLIF(q1.visit_begin, '') IS NOT NULL
+                 AND NULLIF(q1.opd_begin, '') IS NOT NULL
+                 AND TO_CHAR(TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
+                     TO_CHAR(TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+                 AND TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS') >
+                     TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
+            THEN EXTRACT(EPOCH FROM (
+              TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS') -
+              TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
+            ))
             ELSE NULL
           END
-        )),
-      'HH24:MI') AS avg_screen,
+        ))
+      , 'HH24:MI') AS visit_screen,
 
-      /* เวลาระหว่างคัดกรอง -> หมอ */
+      /* เวลาคัดกรอง (OPD) — วันเดียวกัน + ปลาย > ต้น */
       TO_CHAR(
         make_interval(secs => AVG(
           CASE
-            WHEN NULLIF(q1.opd_end, '') IS NOT NULL AND NULLIF(q1.doc_begin, '') IS NOT NULL
-                 AND TO_TIMESTAMP(NULLIF(q1.doc_begin, ''), 'YYYY-MM-DD HH24:MI:SS') >
-                     TO_TIMESTAMP(NULLIF(q1.opd_end, ''), 'YYYY-MM-DD HH24:MI:SS')
-            THEN GREATEST(EXTRACT(EPOCH FROM (
-              TO_TIMESTAMP(NULLIF(q1.doc_begin, ''), 'YYYY-MM-DD HH24:MI:SS') -
-              TO_TIMESTAMP(NULLIF(q1.opd_end, ''), 'YYYY-MM-DD HH24:MI:SS')
-            )), 0)
+            WHEN NULLIF(q1.opd_begin, '') IS NOT NULL
+                 AND NULLIF(q1.opd_end, '') IS NOT NULL
+                 AND TO_CHAR(TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
+                     TO_CHAR(TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+                 AND TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS') >
+                     TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS')
+            THEN EXTRACT(EPOCH FROM (
+              TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS') -
+              TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS')
+            ))
             ELSE NULL
           END
-        )),
-      'HH24:MI') AS screen_doctor,
+        ))
+      , 'HH24:MI') AS avg_screen,
 
-      /* เวลาที่อยู่กับหมอ */
+      /* คัดกรอง -> หมอ — วันเดียวกัน + ปลาย > ต้น */
       TO_CHAR(
         make_interval(secs => AVG(
           CASE
-            WHEN NULLIF(q1.doc_begin, '') IS NOT NULL AND NULLIF(q1.doc_end, '') IS NOT NULL
-                 AND TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS') >
-                     TO_TIMESTAMP(NULLIF(q1.doc_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
-            THEN GREATEST(EXTRACT(EPOCH FROM (
-              TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS') -
-              TO_TIMESTAMP(NULLIF(q1.doc_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
-            )), 0)
+            WHEN NULLIF(q1.opd_end, '') IS NOT NULL
+                 AND NULLIF(q1.doc_begin, '') IS NOT NULL
+                 AND TO_CHAR(TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
+                     TO_CHAR(TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+                 AND TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS') >
+                     TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS')
+            THEN EXTRACT(EPOCH FROM (
+              TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS') -
+              TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS')
+            ))
             ELSE NULL
           END
-        )),
-      'HH24:MI') AS avg_doctor,
+        ))
+      , 'HH24:MI') AS screen_doctor,
 
-      /* เวลาระหว่างหมอ -> เภสัช (ต้องวันเดียวกัน) */
+      /* เวลาที่อยู่กับหมอ — วันเดียวกัน + ปลาย > ต้น */
       TO_CHAR(
         make_interval(secs => AVG(
           CASE
-            WHEN NULLIF(q1.doc_end, '') IS NOT NULL AND NULLIF(q1.pharm_begin, '') IS NOT NULL
-                 AND TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS') >
-                     TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS')
-                 AND TO_CHAR(TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
-                     TO_CHAR(TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
-            THEN GREATEST(EXTRACT(EPOCH FROM (
-              TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS') -
-              TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS')
-            )), 0)
+            WHEN NULLIF(q1.doc_begin, '') IS NOT NULL
+                 AND NULLIF(q1.doc_end, '') IS NOT NULL
+                 AND TO_CHAR(TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
+                     TO_CHAR(TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+                 AND TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS') >
+                     TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS')
+            THEN EXTRACT(EPOCH FROM (
+              TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS') -
+              TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS')
+            ))
             ELSE NULL
           END
-        )),
-      'HH24:MI') AS doctor_pharma,
+        ))
+      , 'HH24:MI') AS avg_doctor,
 
-      /* เวลาทั้งหมดตั้งแต่มาถึง -> จบที่เภสัช (ต้องวันเดียวกัน) */
+      /* หมอ -> เภสัช — วันเดียวกัน + ปลาย > ต้น */
       TO_CHAR(
         make_interval(secs => AVG(
           CASE
-            WHEN NULLIF(q1.pharm_begin, '') IS NOT NULL
-                 AND NULLIF(q1.pharm_end, '') IS NOT NULL
+            WHEN NULLIF(q1.doc_end, '') IS NOT NULL
+                 AND NULLIF(q1.pharm_begin, '') IS NOT NULL
+                 AND TO_CHAR(TO_TIMESTAMP(q1.pharm_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
+                     TO_CHAR(TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+                 AND TO_TIMESTAMP(q1.pharm_begin, 'YYYY-MM-DD HH24:MI:SS') >
+                     TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS')
+            THEN EXTRACT(EPOCH FROM (
+              TO_TIMESTAMP(q1.pharm_begin, 'YYYY-MM-DD HH24:MI:SS') -
+              TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS')
+            ))
+            ELSE NULL
+          END
+        ))
+      , 'HH24:MI') AS doctor_pharma,
+
+      /* มาถึง -> จบเภสัช — วันเดียวกัน + ปลาย > ต้น */
+      TO_CHAR(
+        make_interval(secs => AVG(
+          CASE
+            WHEN NULLIF(q1.pharm_end, '') IS NOT NULL
                  AND NULLIF(q1.visit_begin, '') IS NOT NULL
-                 AND TO_TIMESTAMP(NULLIF(q1.pharm_end, ''), 'YYYY-MM-DD HH24:MI:SS') >
-                     TO_TIMESTAMP(NULLIF(q1.visit_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
-                 AND TO_CHAR(TO_TIMESTAMP(NULLIF(q1.visit_begin, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
-                     TO_CHAR(TO_TIMESTAMP(NULLIF(q1.pharm_end, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
-            THEN GREATEST(EXTRACT(EPOCH FROM (
-              TO_TIMESTAMP(NULLIF(q1.pharm_end, ''), 'YYYY-MM-DD HH24:MI:SS') -
-              TO_TIMESTAMP(NULLIF(q1.visit_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
-            )), 0)
+                 AND TO_CHAR(TO_TIMESTAMP(q1.pharm_end, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
+                     TO_CHAR(TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+                 AND TO_TIMESTAMP(q1.pharm_end, 'YYYY-MM-DD HH24:MI:SS') >
+                     TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
+            THEN EXTRACT(EPOCH FROM (
+              TO_TIMESTAMP(q1.pharm_end, 'YYYY-MM-DD HH24:MI:SS') -
+              TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
+            ))
             ELSE NULL
           END
-        )),
-      'HH24:MI') AS avg_visit_pharma
+        ))
+      , 'HH24:MI') AS avg_visit_pharma
 
     FROM (
       SELECT DISTINCT
@@ -121,7 +142,7 @@ FROM (
       LEFT JOIN t_visit_queue_map ON t_visit.t_visit_id = t_visit_queue_map.t_visit_id
       WHERE t_visit.f_visit_status_id <> '4'
         AND t_visit.f_visit_type_id = '0'
-        AND SUBSTRING(t_visit.visit_begin_visit_time,1,10) BETWEEN :start_date AND :end_date
+        AND SUBSTRING(t_visit.visit_begin_visit_time,1,10) BETWEEN '2567-10-01' AND '2568-09-30'
         AND CAST(SUBSTRING(t_visit.visit_begin_visit_time, 12, 8) AS TIME) BETWEEN '08:30:00' AND '12:00:00'
         AND t_visit_queue_map.b_visit_queue_setup_id = '3217538747849'
         AND NOT EXISTS (
@@ -136,7 +157,7 @@ FROM (
     WHERE opd_begin <> ''
     GROUP BY vstmonth)
 
-  UNION
+  UNION ALL
 
   /* ===== Afternoon ===== */
   (SELECT
@@ -146,92 +167,119 @@ FROM (
         'YYYY-MM'
       ) AS vstmonth,
 
-      TO_CHAR(
-        make_interval(secs => AVG(EXTRACT(EPOCH FROM (
-          TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS') -
-          TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
-      )))), 'HH24:MI') AS visit_screen,
-
+      /* มาถึง -> เริ่มคัดกรอง (วันเดียวกัน + ปลาย > ต้น) */
       TO_CHAR(
         make_interval(secs => AVG(
           CASE
-            WHEN NULLIF(q1.opd_begin, '') IS NOT NULL AND NULLIF(q1.opd_end, '') IS NOT NULL
-                 AND TO_TIMESTAMP(NULLIF(q1.opd_end, ''), 'YYYY-MM-DD HH24:MI:SS') >
-                     TO_TIMESTAMP(NULLIF(q1.opd_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
-            THEN GREATEST(EXTRACT(EPOCH FROM (
-              TO_TIMESTAMP(NULLIF(q1.opd_end, ''), 'YYYY-MM-DD HH24:MI:SS') -
-              TO_TIMESTAMP(NULLIF(q1.opd_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
-            )), 0)
+            WHEN NULLIF(q1.visit_begin, '') IS NOT NULL
+                 AND NULLIF(q1.opd_begin, '') IS NOT NULL
+                 AND TO_CHAR(TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
+                     TO_CHAR(TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+                 AND TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS') >
+                     TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
+            THEN EXTRACT(EPOCH FROM (
+              TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS') -
+              TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
+            ))
             ELSE NULL
           END
-        )),
-      'HH24:MI') AS avg_screen,
+        ))
+      , 'HH24:MI') AS visit_screen,
 
+      /* เวลาคัดกรอง (OPD) — วันเดียวกัน + ปลาย > ต้น */
       TO_CHAR(
         make_interval(secs => AVG(
           CASE
-            WHEN NULLIF(q1.opd_end, '') IS NOT NULL AND NULLIF(q1.doc_begin, '') IS NOT NULL
-                 AND TO_TIMESTAMP(NULLIF(q1.doc_begin, ''), 'YYYY-MM-DD HH24:MI:SS') >
-                     TO_TIMESTAMP(NULLIF(q1.opd_end, ''), 'YYYY-MM-DD HH24:MI:SS')
-            THEN GREATEST(EXTRACT(EPOCH FROM (
-              TO_TIMESTAMP(NULLIF(q1.doc_begin, ''), 'YYYY-MM-DD HH24:MI:SS') -
-              TO_TIMESTAMP(NULLIF(q1.opd_end, ''), 'YYYY-MM-DD HH24:MI:SS')
-            )), 0)
+            WHEN NULLIF(q1.opd_begin, '') IS NOT NULL
+                 AND NULLIF(q1.opd_end, '') IS NOT NULL
+                 AND TO_CHAR(TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
+                     TO_CHAR(TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+                 AND TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS') >
+                     TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS')
+            THEN EXTRACT(EPOCH FROM (
+              TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS') -
+              TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS')
+            ))
             ELSE NULL
           END
-        )),
-      'HH24:MI') AS screen_doctor,
+        ))
+      , 'HH24:MI') AS avg_screen,
 
+      /* คัดกรอง -> หมอ — วันเดียวกัน + ปลาย > ต้น */
       TO_CHAR(
         make_interval(secs => AVG(
           CASE
-            WHEN NULLIF(q1.doc_begin, '') IS NOT NULL AND NULLIF(q1.doc_end, '') IS NOT NULL
-                 AND TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS') >
-                     TO_TIMESTAMP(NULLIF(q1.doc_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
-            THEN GREATEST(EXTRACT(EPOCH FROM (
-              TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS') -
-              TO_TIMESTAMP(NULLIF(q1.doc_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
-            )), 0)
+            WHEN NULLIF(q1.opd_end, '') IS NOT NULL
+                 AND NULLIF(q1.doc_begin, '') IS NOT NULL
+                 AND TO_CHAR(TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
+                     TO_CHAR(TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+                 AND TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS') >
+                     TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS')
+            THEN EXTRACT(EPOCH FROM (
+              TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS') -
+              TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS')
+            ))
             ELSE NULL
           END
-        )),
-      'HH24:MI') AS avg_doctor,
+        ))
+      , 'HH24:MI') AS screen_doctor,
 
+      /* เวลาที่อยู่กับหมอ — วันเดียวกัน + ปลาย > ต้น */
       TO_CHAR(
         make_interval(secs => AVG(
           CASE
-            WHEN NULLIF(q1.doc_end, '') IS NOT NULL AND NULLIF(q1.pharm_begin, '') IS NOT NULL
-                 AND TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS') >
-                     TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS')
-                 AND TO_CHAR(TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
-                     TO_CHAR(TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
-            THEN GREATEST(EXTRACT(EPOCH FROM (
-              TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS') -
-              TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS')
-            )), 0)
+            WHEN NULLIF(q1.doc_begin, '') IS NOT NULL
+                 AND NULLIF(q1.doc_end, '') IS NOT NULL
+                 AND TO_CHAR(TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
+                     TO_CHAR(TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+                 AND TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS') >
+                     TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS')
+            THEN EXTRACT(EPOCH FROM (
+              TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS') -
+              TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS')
+            ))
             ELSE NULL
           END
-        )),
-      'HH24:MI') AS doctor_pharma,
+        ))
+      , 'HH24:MI') AS avg_doctor,
 
+      /* หมอ -> เภสัช — วันเดียวกัน + ปลาย > ต้น */
       TO_CHAR(
         make_interval(secs => AVG(
           CASE
-            WHEN NULLIF(q1.pharm_begin, '') IS NOT NULL
-                 AND NULLIF(q1.pharm_end, '') IS NOT NULL
+            WHEN NULLIF(q1.doc_end, '') IS NOT NULL
+                 AND NULLIF(q1.pharm_begin, '') IS NOT NULL
+                 AND TO_CHAR(TO_TIMESTAMP(q1.pharm_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
+                     TO_CHAR(TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+                 AND TO_TIMESTAMP(q1.pharm_begin, 'YYYY-MM-DD HH24:MI:SS') >
+                     TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS')
+            THEN EXTRACT(EPOCH FROM (
+              TO_TIMESTAMP(q1.pharm_begin, 'YYYY-MM-DD HH24:MI:SS') -
+              TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS')
+            ))
+            ELSE NULL
+          END
+        ))
+      , 'HH24:MI') AS doctor_pharma,
+
+      /* มาถึง -> จบเภสัช — วันเดียวกัน + ปลาย > ต้น */
+      TO_CHAR(
+        make_interval(secs => AVG(
+          CASE
+            WHEN NULLIF(q1.pharm_end, '') IS NOT NULL
                  AND NULLIF(q1.visit_begin, '') IS NOT NULL
-                 AND TO_TIMESTAMP(NULLIF(q1.pharm_end, ''), 'YYYY-MM-DD HH24:MI:SS') >
-                     TO_TIMESTAMP(NULLIF(q1.visit_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
-                 AND TO_CHAR(TO_TIMESTAMP(NULLIF(q1.visit_begin, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
-                     TO_CHAR(TO_TIMESTAMP(NULLIF(q1.pharm_end, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
-            THEN GREATEST(EXTRACT(EPOCH FROM (
-              TO_TIMESTAMP(NULLIF(q1.pharm_end, ''), 'YYYY-MM-DD HH24:MI:SS') -
-              TO_TIMESTAMP(NULLIF(q1.visit_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
-            )), 0)
+                 AND TO_CHAR(TO_TIMESTAMP(q1.pharm_end, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
+                     TO_CHAR(TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+                 AND TO_TIMESTAMP(q1.pharm_end, 'YYYY-MM-DD HH24:MI:SS') >
+                     TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
+            THEN EXTRACT(EPOCH FROM (
+              TO_TIMESTAMP(q1.pharm_end, 'YYYY-MM-DD HH24:MI:SS') -
+              TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
+            ))
             ELSE NULL
           END
-        )),
-      'HH24:MI') AS avg_visit_pharma
+        ))
+      , 'HH24:MI') AS avg_visit_pharma
 
     FROM (
       SELECT DISTINCT
@@ -252,7 +300,7 @@ FROM (
       LEFT JOIN t_visit_queue_map ON t_visit.t_visit_id = t_visit_queue_map.t_visit_id
       WHERE t_visit.f_visit_status_id <> '4'
         AND t_visit.f_visit_type_id = '0'
-        AND SUBSTRING(t_visit.visit_begin_visit_time,1,10) BETWEEN :start_date AND :end_date
+        AND SUBSTRING(t_visit.visit_begin_visit_time,1,10) BETWEEN '2567-10-01' AND '2568-09-30'
         AND CAST(SUBSTRING(t_visit.visit_begin_visit_time, 12, 8) AS TIME) BETWEEN '13:00:00' AND '16:30:00'
         AND t_visit_queue_map.b_visit_queue_setup_id = '3217538747849'
         AND NOT EXISTS (
@@ -267,7 +315,7 @@ FROM (
     WHERE opd_begin <> ''
     GROUP BY vstmonth)
 
-  UNION
+  UNION ALL
 
   /* ===== AllDay ===== */
   (SELECT
@@ -277,92 +325,119 @@ FROM (
         'YYYY-MM'
       ) AS vstmonth,
 
-      TO_CHAR(
-        make_interval(secs => AVG(EXTRACT(EPOCH FROM (
-          TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS') -
-          TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
-      )))), 'HH24:MI') AS visit_screen,
-
+      /* มาถึง -> เริ่มคัดกรอง (วันเดียวกัน + ปลาย > ต้น) */
       TO_CHAR(
         make_interval(secs => AVG(
           CASE
-            WHEN NULLIF(q1.opd_begin, '') IS NOT NULL AND NULLIF(q1.opd_end, '') IS NOT NULL
-                 AND TO_TIMESTAMP(NULLIF(q1.opd_end, ''), 'YYYY-MM-DD HH24:MI:SS') >
-                     TO_TIMESTAMP(NULLIF(q1.opd_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
-            THEN GREATEST(EXTRACT(EPOCH FROM (
-              TO_TIMESTAMP(NULLIF(q1.opd_end, ''), 'YYYY-MM-DD HH24:MI:SS') -
-              TO_TIMESTAMP(NULLIF(q1.opd_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
-            )), 0)
+            WHEN NULLIF(q1.visit_begin, '') IS NOT NULL
+                 AND NULLIF(q1.opd_begin, '') IS NOT NULL
+                 AND TO_CHAR(TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
+                     TO_CHAR(TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+                 AND TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS') >
+                     TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
+            THEN EXTRACT(EPOCH FROM (
+              TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS') -
+              TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
+            ))
             ELSE NULL
           END
-        )),
-      'HH24:MI') AS avg_screen,
+        ))
+      , 'HH24:MI') AS visit_screen,
 
+      /* เวลาคัดกรอง (OPD) — วันเดียวกัน + ปลาย > ต้น */
       TO_CHAR(
         make_interval(secs => AVG(
           CASE
-            WHEN NULLIF(q1.opd_end, '') IS NOT NULL AND NULLIF(q1.doc_begin, '') IS NOT NULL
-                 AND TO_TIMESTAMP(NULLIF(q1.doc_begin, ''), 'YYYY-MM-DD HH24:MI:SS') >
-                     TO_TIMESTAMP(NULLIF(q1.opd_end, ''), 'YYYY-MM-DD HH24:MI:SS')
-            THEN GREATEST(EXTRACT(EPOCH FROM (
-              TO_TIMESTAMP(NULLIF(q1.doc_begin, ''), 'YYYY-MM-DD HH24:MI:SS') -
-              TO_TIMESTAMP(NULLIF(q1.opd_end, ''), 'YYYY-MM-DD HH24:MI:SS')
-            )), 0)
+            WHEN NULLIF(q1.opd_begin, '') IS NOT NULL
+                 AND NULLIF(q1.opd_end, '') IS NOT NULL
+                 AND TO_CHAR(TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
+                     TO_CHAR(TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+                 AND TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS') >
+                     TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS')
+            THEN EXTRACT(EPOCH FROM (
+              TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS') -
+              TO_TIMESTAMP(q1.opd_begin, 'YYYY-MM-DD HH24:MI:SS')
+            ))
             ELSE NULL
           END
-        )),
-      'HH24:MI') AS screen_doctor,
+        ))
+      , 'HH24:MI') AS avg_screen,
 
+      /* คัดกรอง -> หมอ — วันเดียวกัน + ปลาย > ต้น */
       TO_CHAR(
         make_interval(secs => AVG(
           CASE
-            WHEN NULLIF(q1.doc_begin, '') IS NOT NULL AND NULLIF(q1.doc_end, '') IS NOT NULL
-                 AND TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS') >
-                     TO_TIMESTAMP(NULLIF(q1.doc_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
-            THEN GREATEST(EXTRACT(EPOCH FROM (
-              TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS') -
-              TO_TIMESTAMP(NULLIF(q1.doc_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
-            )), 0)
+            WHEN NULLIF(q1.opd_end, '') IS NOT NULL
+                 AND NULLIF(q1.doc_begin, '') IS NOT NULL
+                 AND TO_CHAR(TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
+                     TO_CHAR(TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+                 AND TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS') >
+                     TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS')
+            THEN EXTRACT(EPOCH FROM (
+              TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS') -
+              TO_TIMESTAMP(q1.opd_end, 'YYYY-MM-DD HH24:MI:SS')
+            ))
             ELSE NULL
           END
-        )),
-      'HH24:MI') AS avg_doctor,
+        ))
+      , 'HH24:MI') AS screen_doctor,
 
+      /* เวลาที่อยู่กับหมอ — วันเดียวกัน + ปลาย > ต้น */
       TO_CHAR(
         make_interval(secs => AVG(
           CASE
-            WHEN NULLIF(q1.doc_end, '') IS NOT NULL AND NULLIF(q1.pharm_begin, '') IS NOT NULL
-                 AND TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS') >
-                     TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS')
-                 AND TO_CHAR(TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
-                     TO_CHAR(TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
-            THEN GREATEST(EXTRACT(EPOCH FROM (
-              TO_TIMESTAMP(NULLIF(q1.pharm_begin, ''), 'YYYY-MM-DD HH24:MI:SS') -
-              TO_TIMESTAMP(NULLIF(q1.doc_end, ''), 'YYYY-MM-DD HH24:MI:SS')
-            )), 0)
+            WHEN NULLIF(q1.doc_begin, '') IS NOT NULL
+                 AND NULLIF(q1.doc_end, '') IS NOT NULL
+                 AND TO_CHAR(TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
+                     TO_CHAR(TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+                 AND TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS') >
+                     TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS')
+            THEN EXTRACT(EPOCH FROM (
+              TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS') -
+              TO_TIMESTAMP(q1.doc_begin, 'YYYY-MM-DD HH24:MI:SS')
+            ))
             ELSE NULL
           END
-        )),
-      'HH24:MI') AS doctor_pharma,
+        ))
+      , 'HH24:MI') AS avg_doctor,
 
+      /* หมอ -> เภสัช — วันเดียวกัน + ปลาย > ต้น */
       TO_CHAR(
         make_interval(secs => AVG(
           CASE
-            WHEN NULLIF(q1.pharm_begin, '') IS NOT NULL
-                 AND NULLIF(q1.pharm_end, '') IS NOT NULL
+            WHEN NULLIF(q1.doc_end, '') IS NOT NULL
+                 AND NULLIF(q1.pharm_begin, '') IS NOT NULL
+                 AND TO_CHAR(TO_TIMESTAMP(q1.pharm_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
+                     TO_CHAR(TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+                 AND TO_TIMESTAMP(q1.pharm_begin, 'YYYY-MM-DD HH24:MI:SS') >
+                     TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS')
+            THEN EXTRACT(EPOCH FROM (
+              TO_TIMESTAMP(q1.pharm_begin, 'YYYY-MM-DD HH24:MI:SS') -
+              TO_TIMESTAMP(q1.doc_end, 'YYYY-MM-DD HH24:MI:SS')
+            ))
+            ELSE NULL
+          END
+        ))
+      , 'HH24:MI') AS doctor_pharma,
+
+      /* มาถึง -> จบเภสัช — วันเดียวกัน + ปลาย > ต้น */
+      TO_CHAR(
+        make_interval(secs => AVG(
+          CASE
+            WHEN NULLIF(q1.pharm_end, '') IS NOT NULL
                  AND NULLIF(q1.visit_begin, '') IS NOT NULL
-                 AND TO_TIMESTAMP(NULLIF(q1.pharm_end, ''), 'YYYY-MM-DD HH24:MI:SS') >
-                     TO_TIMESTAMP(NULLIF(q1.visit_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
-                 AND TO_CHAR(TO_TIMESTAMP(NULLIF(q1.visit_begin, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
-                     TO_CHAR(TO_TIMESTAMP(NULLIF(q1.pharm_end, ''), 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
-            THEN GREATEST(EXTRACT(EPOCH FROM (
-              TO_TIMESTAMP(NULLIF(q1.pharm_end, ''), 'YYYY-MM-DD HH24:MI:SS') -
-              TO_TIMESTAMP(NULLIF(q1.visit_begin, ''), 'YYYY-MM-DD HH24:MI:SS')
-            )), 0)
+                 AND TO_CHAR(TO_TIMESTAMP(q1.pharm_end, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') =
+                     TO_CHAR(TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+                 AND TO_TIMESTAMP(q1.pharm_end, 'YYYY-MM-DD HH24:MI:SS') >
+                     TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
+            THEN EXTRACT(EPOCH FROM (
+              TO_TIMESTAMP(q1.pharm_end, 'YYYY-MM-DD HH24:MI:SS') -
+              TO_TIMESTAMP(q1.visit_begin, 'YYYY-MM-DD HH24:MI:SS')
+            ))
             ELSE NULL
           END
-        )),
-      'HH24:MI') AS avg_visit_pharma
+        ))
+      , 'HH24:MI') AS avg_visit_pharma
 
     FROM (
       SELECT DISTINCT
@@ -383,7 +458,7 @@ FROM (
       LEFT JOIN t_visit_queue_map ON t_visit.t_visit_id = t_visit_queue_map.t_visit_id
       WHERE t_visit.f_visit_status_id <> '4'
         AND t_visit.f_visit_type_id = '0'
-        AND SUBSTRING(t_visit.visit_begin_visit_time,1,10) BETWEEN :start_date AND :end_date
+        AND SUBSTRING(t_visit.visit_begin_visit_time,1,10) BETWEEN '2567-10-01' AND '2568-09-30'
         AND CAST(SUBSTRING(t_visit.visit_begin_visit_time, 12, 8) AS TIME) BETWEEN '08:30:00' AND '16:30:00'
         AND t_visit_queue_map.b_visit_queue_setup_id = '3217538747849'
         AND NOT EXISTS (
