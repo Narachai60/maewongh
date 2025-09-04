@@ -1,0 +1,7 @@
+SELECT distinct (visit_hn) 
+from t_visit 
+WHERE visit_begin_visit_time BETWEEN '2565-10-01' AND '2566-09-31'
+
+AND f_visit_type_id = '0'
+--AND visit_dx_stat <> ''
+and f_visit_status_id <> '4'

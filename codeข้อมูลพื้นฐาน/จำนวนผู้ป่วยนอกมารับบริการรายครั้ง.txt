@@ -1,0 +1,6 @@
+SELECT  *
+
+from t_visit 
+WHERE f_visit_type_id = '0'
+AND  visit_begin_visit_time BETWEEN '2560-08-01' AND '2560-08-31'
+--AND visit_dx_stat <> ''
