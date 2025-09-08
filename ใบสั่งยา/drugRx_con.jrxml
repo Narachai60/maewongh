@@ -1229,7 +1229,7 @@ $F{visit_date}),false)]]></textFieldExpression>
  +" "+ $F{short_dose})
 :($F{common_name})]]></textFieldExpression>
 				</textField>
-				<textField isStretchWithOverflow="true" pattern="###0" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+				<textField isStretchWithOverflow="true" pattern="#,##0.00" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						mode="Transparent"
 						x="278"
