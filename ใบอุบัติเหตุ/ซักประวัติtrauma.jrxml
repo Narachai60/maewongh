@@ -166,7 +166,7 @@ FROM
 	left JOIN f_allergy_level  ON f_allergy_level.f_allergy_level_id = t_patient_drug_allergy.f_allergy_level_id
 	left JOIN f_naranjo_interpretation  ON f_naranjo_interpretation.f_naranjo_interpretation_id = t_patient_drug_allergy.f_naranjo_interpretation_id 
 WHERE
-	t_visit.visit_vn = '168001994'
+	t_visit.t_visit_id = $P{visit_id}
 
 	
 GROUP BY
