@@ -302,9 +302,9 @@ GROUP BY
 				<image  evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
 						x="-10"
-						y="145"
+						y="139"
 						width="556"
-						height="657"
+						height="663"
 						key="image-1"/>
 					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
 					<graphicElement stretchType="NoStretch"/>
@@ -386,7 +386,7 @@ GROUP BY
 					<textElement textAlignment="Left">
 						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="12" isBold="true"/>
 					</textElement>
-				<text><![CDATA[V/S:BP......................mmHG. PR.................../min. T..............c E........M........V.......O2 Sat......% Pupill size Lt..........mm..........DTX..........mg% BW............Kg.]]></text>
+				<text><![CDATA[V/S:BP......................mmHG. PR.................../min. RR........../min. T..............c E........M........V.......O2 Sat......% Pupill size Lt..........mm..........DTX..........mg% BW............Kg.]]></text>
 				</staticText>
 				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
@@ -413,19 +413,6 @@ GROUP BY
 						<font fontName="TH SarabunPSK" size="12"/>
 					</textElement>
 				<textFieldExpression   class="java.lang.String"><![CDATA[$F{วันที่รับบริการ}]]></textFieldExpression>
-				</textField>
-				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
-					<reportElement
-						x="117"
-						y="56"
-						width="67"
-						height="16"
-						key="textField-7"/>
-					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
-					<textElement textAlignment="Center">
-						<font fontName="TH SarabunPSK" size="12"/>
-					</textElement>
-				<textFieldExpression   class="java.lang.String"><![CDATA[$F{เวลาที่มารับบริการ}]]></textFieldExpression>
 				</textField>
 				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
@@ -481,9 +468,9 @@ GROUP BY
 				</textField>
 				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
 					<reportElement
-						x="175"
+						x="225"
 						y="120"
-						width="37"
+						width="29"
 						height="16"
 						key="textField-12"/>
 					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
