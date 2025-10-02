@@ -1360,6 +1360,250 @@ limit 100 ) as q1
 group by q1.dateprint,q1.timeprint
 
 
+union
+select
+max(case when (q1.status = '1' or null and (q1.bed = 'ท 10')) then 'ท10' else '' end) as "bed"
+,max(case when (q1.status = '1' and (q1.bed = 'ท 10')) then  q1.คำนำหน้า else '' end) as "name"
+,max(case when (q1.status = '1' and (q1.bed = 'ท 10')) then 1 else 0 end) as total
+,q1.datePrint
+,q1.timeprint
+from
+(select
+distinct(t_visit.visit_vn) as an
+--,row_number() over (order by t_visit.visit_vn DESC) as rank
+--,row_number() over (order by t_visit.visit_vn DESC) as rank1
+,f_patient_prefix.patient_prefix_description || ' '|| t_patient.patient_firstname || ' '|| t_patient.patient_lastname as คำนำหน้า
+,t_visit.visit_bed as bed
+,current_date as datePrint
+,current_time as timeprint
+,t_visit.f_visit_status_id as status
+
+from t_patient 
+left JOIN t_visit ON t_patient.t_patient_id = t_visit.t_patient_id
+left join b_visit_ward on t_visit.b_visit_ward_id = b_visit_ward.b_visit_ward_id
+left JOIN f_patient_prefix ON f_patient_prefix.f_patient_prefix_id = t_patient.f_patient_prefix_id
+left join f_sex on t_patient.f_sex_id = f_sex.f_sex_id
+
+where 
+t_visit.f_visit_type_id = '1' 
+and t_visit.f_visit_status_id <> '4'
+and b_visit_ward.visit_ward_description like '%ป่วยใน%'
+and b_visit_ward.visit_ward_active = '1'
+and t_visit.f_visit_status_id = '1'
+order by status
+limit 100 ) as q1
+group by q1.dateprint,q1.timeprint
+
+
+union
+select
+max(case when (q1.status = '1' or null and (q1.bed = 'ท 11')) then 'ท11' else '' end) as "bed"
+,max(case when (q1.status = '1' and (q1.bed = 'ท 11')) then  q1.คำนำหน้า else '' end) as "name"
+,max(case when (q1.status = '1' and (q1.bed = 'ท 11')) then 1 else 0 end) as total
+,q1.datePrint
+,q1.timeprint
+from
+(select
+distinct(t_visit.visit_vn) as an
+--,row_number() over (order by t_visit.visit_vn DESC) as rank
+--,row_number() over (order by t_visit.visit_vn DESC) as rank1
+,f_patient_prefix.patient_prefix_description || ' '|| t_patient.patient_firstname || ' '|| t_patient.patient_lastname as คำนำหน้า
+,t_visit.visit_bed as bed
+,current_date as datePrint
+,current_time as timeprint
+,t_visit.f_visit_status_id as status
+
+from t_patient 
+left JOIN t_visit ON t_patient.t_patient_id = t_visit.t_patient_id
+left join b_visit_ward on t_visit.b_visit_ward_id = b_visit_ward.b_visit_ward_id
+left JOIN f_patient_prefix ON f_patient_prefix.f_patient_prefix_id = t_patient.f_patient_prefix_id
+left join f_sex on t_patient.f_sex_id = f_sex.f_sex_id
+
+where 
+t_visit.f_visit_type_id = '1' 
+and t_visit.f_visit_status_id <> '4'
+and b_visit_ward.visit_ward_description like '%ป่วยใน%'
+and b_visit_ward.visit_ward_active = '1'
+and t_visit.f_visit_status_id = '1'
+order by status
+limit 100 ) as q1
+group by q1.dateprint,q1.timeprint
+
+
+union
+select
+max(case when (q1.status = '1' or null and (q1.bed = 'ท 12')) then 'ท12' else '' end) as "bed"
+,max(case when (q1.status = '1' and (q1.bed = 'ท 12')) then  q1.คำนำหน้า else '' end) as "name"
+,max(case when (q1.status = '1' and (q1.bed = 'ท 12')) then 1 else 0 end) as total
+,q1.datePrint
+,q1.timeprint
+from
+(select
+distinct(t_visit.visit_vn) as an
+--,row_number() over (order by t_visit.visit_vn DESC) as rank
+--,row_number() over (order by t_visit.visit_vn DESC) as rank1
+,f_patient_prefix.patient_prefix_description || ' '|| t_patient.patient_firstname || ' '|| t_patient.patient_lastname as คำนำหน้า
+,t_visit.visit_bed as bed
+,current_date as datePrint
+,current_time as timeprint
+,t_visit.f_visit_status_id as status
+
+from t_patient 
+left JOIN t_visit ON t_patient.t_patient_id = t_visit.t_patient_id
+left join b_visit_ward on t_visit.b_visit_ward_id = b_visit_ward.b_visit_ward_id
+left JOIN f_patient_prefix ON f_patient_prefix.f_patient_prefix_id = t_patient.f_patient_prefix_id
+left join f_sex on t_patient.f_sex_id = f_sex.f_sex_id
+
+where 
+t_visit.f_visit_type_id = '1' 
+and t_visit.f_visit_status_id <> '4'
+and b_visit_ward.visit_ward_description like '%ป่วยใน%'
+and b_visit_ward.visit_ward_active = '1'
+and t_visit.f_visit_status_id = '1'
+order by status
+limit 100 ) as q1
+group by q1.dateprint,q1.timeprint
+
+
+union
+select
+max(case when (q1.status = '1' or null and (q1.bed = 'ท 13')) then 'ท13' else '' end) as "bed"
+,max(case when (q1.status = '1' and (q1.bed = 'ท 13')) then  q1.คำนำหน้า else '' end) as "name"
+,max(case when (q1.status = '1' and (q1.bed = 'ท 13')) then 1 else 0 end) as total
+,q1.datePrint
+,q1.timeprint
+from
+(select
+distinct(t_visit.visit_vn) as an
+--,row_number() over (order by t_visit.visit_vn DESC) as rank
+--,row_number() over (order by t_visit.visit_vn DESC) as rank1
+,f_patient_prefix.patient_prefix_description || ' '|| t_patient.patient_firstname || ' '|| t_patient.patient_lastname as คำนำหน้า
+,t_visit.visit_bed as bed
+,current_date as datePrint
+,current_time as timeprint
+,t_visit.f_visit_status_id as status
+
+from t_patient 
+left JOIN t_visit ON t_patient.t_patient_id = t_visit.t_patient_id
+left join b_visit_ward on t_visit.b_visit_ward_id = b_visit_ward.b_visit_ward_id
+left JOIN f_patient_prefix ON f_patient_prefix.f_patient_prefix_id = t_patient.f_patient_prefix_id
+left join f_sex on t_patient.f_sex_id = f_sex.f_sex_id
+
+where 
+t_visit.f_visit_type_id = '1' 
+and t_visit.f_visit_status_id <> '4'
+and b_visit_ward.visit_ward_description like '%ป่วยใน%'
+and b_visit_ward.visit_ward_active = '1'
+and t_visit.f_visit_status_id = '1'
+order by status
+limit 100 ) as q1
+group by q1.dateprint,q1.timeprint
+
+
+union
+select
+max(case when (q1.status = '1' or null and (q1.bed = 'ท 14')) then 'ท14' else '' end) as "bed"
+,max(case when (q1.status = '1' and (q1.bed = 'ท 14')) then  q1.คำนำหน้า else '' end) as "name"
+,max(case when (q1.status = '1' and (q1.bed = 'ท 14')) then 1 else 0 end) as total
+,q1.datePrint
+,q1.timeprint
+from
+(select
+distinct(t_visit.visit_vn) as an
+--,row_number() over (order by t_visit.visit_vn DESC) as rank
+--,row_number() over (order by t_visit.visit_vn DESC) as rank1
+,f_patient_prefix.patient_prefix_description || ' '|| t_patient.patient_firstname || ' '|| t_patient.patient_lastname as คำนำหน้า
+,t_visit.visit_bed as bed
+,current_date as datePrint
+,current_time as timeprint
+,t_visit.f_visit_status_id as status
+
+from t_patient 
+left JOIN t_visit ON t_patient.t_patient_id = t_visit.t_patient_id
+left join b_visit_ward on t_visit.b_visit_ward_id = b_visit_ward.b_visit_ward_id
+left JOIN f_patient_prefix ON f_patient_prefix.f_patient_prefix_id = t_patient.f_patient_prefix_id
+left join f_sex on t_patient.f_sex_id = f_sex.f_sex_id
+
+where 
+t_visit.f_visit_type_id = '1' 
+and t_visit.f_visit_status_id <> '4'
+and b_visit_ward.visit_ward_description like '%ป่วยใน%'
+and b_visit_ward.visit_ward_active = '1'
+and t_visit.f_visit_status_id = '1'
+order by status
+limit 100 ) as q1
+group by q1.dateprint,q1.timeprint
+
+
+union
+select
+max(case when (q1.status = '1' or null and (q1.bed = 'ท 15')) then 'ท15' else '' end) as "bed"
+,max(case when (q1.status = '1' and (q1.bed = 'ท 15')) then  q1.คำนำหน้า else '' end) as "name"
+,max(case when (q1.status = '1' and (q1.bed = 'ท 15')) then 1 else 0 end) as total
+,q1.datePrint
+,q1.timeprint
+from
+(select
+distinct(t_visit.visit_vn) as an
+--,row_number() over (order by t_visit.visit_vn DESC) as rank
+--,row_number() over (order by t_visit.visit_vn DESC) as rank1
+,f_patient_prefix.patient_prefix_description || ' '|| t_patient.patient_firstname || ' '|| t_patient.patient_lastname as คำนำหน้า
+,t_visit.visit_bed as bed
+,current_date as datePrint
+,current_time as timeprint
+,t_visit.f_visit_status_id as status
+
+from t_patient 
+left JOIN t_visit ON t_patient.t_patient_id = t_visit.t_patient_id
+left join b_visit_ward on t_visit.b_visit_ward_id = b_visit_ward.b_visit_ward_id
+left JOIN f_patient_prefix ON f_patient_prefix.f_patient_prefix_id = t_patient.f_patient_prefix_id
+left join f_sex on t_patient.f_sex_id = f_sex.f_sex_id
+
+where 
+t_visit.f_visit_type_id = '1' 
+and t_visit.f_visit_status_id <> '4'
+and b_visit_ward.visit_ward_description like '%ป่วยใน%'
+and b_visit_ward.visit_ward_active = '1'
+and t_visit.f_visit_status_id = '1'
+order by status
+limit 100 ) as q1
+group by q1.dateprint,q1.timeprint
+
+
+
+union
+select
+max(case when (q1.status = '1' or null and (q1.bed = 'ท 16')) then 'ท16' else '' end) as "bed"
+,max(case when (q1.status = '1' and (q1.bed = 'ท 16')) then  q1.คำนำหน้า else '' end) as "name"
+,max(case when (q1.status = '1' and (q1.bed = 'ท 16')) then 1 else 0 end) as total
+,q1.datePrint
+,q1.timeprint
+from
+(select
+distinct(t_visit.visit_vn) as an
+--,row_number() over (order by t_visit.visit_vn DESC) as rank
+--,row_number() over (order by t_visit.visit_vn DESC) as rank1
+,f_patient_prefix.patient_prefix_description || ' '|| t_patient.patient_firstname || ' '|| t_patient.patient_lastname as คำนำหน้า
+,t_visit.visit_bed as bed
+,current_date as datePrint
+,current_time as timeprint
+,t_visit.f_visit_status_id as status
+
+from t_patient 
+left JOIN t_visit ON t_patient.t_patient_id = t_visit.t_patient_id
+left join b_visit_ward on t_visit.b_visit_ward_id = b_visit_ward.b_visit_ward_id
+left JOIN f_patient_prefix ON f_patient_prefix.f_patient_prefix_id = t_patient.f_patient_prefix_id
+left join f_sex on t_patient.f_sex_id = f_sex.f_sex_id
+
+where 
+t_visit.f_visit_type_id = '1' 
+and t_visit.f_visit_status_id <> '4'
+and b_visit_ward.visit_ward_description like '%ป่วยใน%'
+and b_visit_ward.visit_ward_active = '1'
+and t_visit.f_visit_status_id = '1'
+order by status
+limit 100 ) as q1
+group by q1.dateprint,q1.timeprint
 
 
 order by bed) as q2]]></queryString>
