@@ -1,0 +1,1089 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport
+		 name="OPD_Card_con"
+		 columnCount="1"
+		 printOrder="Vertical"
+		 orientation="Portrait"
+		 pageWidth="595"
+		 pageHeight="842"
+		 columnWidth="595"
+		 columnSpacing="0"
+		 leftMargin="0"
+		 rightMargin="0"
+		 topMargin="0"
+		 bottomMargin="0"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<parameter name="SUBREPORT_DIR" isForPrompting="true" class="java.lang.String">
+		<defaultValueExpression ><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+	<parameter name="printer_id" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="patient_id" isForPrompting="false" class="java.lang.String"/>
+	<queryString><![CDATA[select 
+t_patient.patient_birthday as birthdate,
+CASE   WHEN ((substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)years') ) > '1') 
+                  THEN substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)years') 
+                  WHEN ((substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)year') ) 
+IS NOT NULL) AND ((substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)years') ) IS NULL) 
+                  THEN substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)year') 
+                  WHEN ((substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)year') ) 
+IS NULL) AND ((substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)years') ) IS NULL) 
+                  THEN '' 
+         END AS year_age
+,CASE   WHEN ((substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)mons') ) > '1') 
+                  THEN substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)mons') 
+                  WHEN ((substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)mon') ) 
+IS NOT NULL) AND ((substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)mons') ) IS NULL) 
+                  THEN substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)mon') 
+                  WHEN ((substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)mons') ) 
+IS NULL) AND ((substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)mon') ) IS NULL) 
+                  THEN '' 
+         END AS mount_age
+   ,CASE   WHEN ((substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)days') ) > '1') 
+                  THEN substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)days') 
+                  WHEN ((substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)day') ) 
+IS NOT NULL) AND ((substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)days') ) IS NULL) 
+                  THEN substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)day') 
+                  WHEN ((substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)days') ) 
+IS NULL) AND ((substring(' ' || age(to_date(t_patient.patient_birthday,'YYYY-MM-DD') - interval '543 year') from '(...)day') ) IS NULL) 
+                  THEN '' 
+         END AS day_age      
+,f_patient_marriage_status.patient_marriage_status_description as marry
+,f_patient_occupation.patient_occupation_description as occupation
+,f_patient_religion.patient_religion_description as religion
+,f_patient_nation.patient_nation_description as nation
+,race.patient_nation_description as race
+,f_patient_prefix.patient_prefix_description 
+ || ' ' || t_patient.patient_firstname 
+ || ' ' || t_patient.patient_lastname as name
+,b_contract_plans.contract_plans_description as plan
+,t_patient.patient_hn as hn
+,t_patient.patient_house 
+ || ' หมู่ ' || t_patient.patient_moo
+ || ' ถนน' || t_patient.patient_road 
+ || ' ตำบล' || tambon.address_description
+ || ' อำเภอ' || amphur.address_description 
+ || ' จังหวัด' || changwat.address_description as address
+,t_patient.patient_phone_number as telephonenumber
+,case when t_patient.patient_contact_firstname <> '' 
+then t_patient.patient_contact_firstname || ' ' || t_patient.patient_contact_lastname 
+else 'ไม่รู้สึกตัว หรือ ไม่มีญาติ' end as teller
+,t_patient.patient_pid as pid
+,t_patient.patient_contact_house 
+ || ' หมู่ ' || t_patient.patient_contact_moo
+ || ' ถนน' || t_patient.patient_contact_road  
+ || ' ตำบล' || tambon_ct.address_description
+ || ' อำเภอ' || amphur_ct.address_description 
+ || ' จังหวัด' || changwat_ct.address_description as telleraddress
+,t_patient.patient_father_firstname
+ || ' ' || t_patient.patient_father_lastname as fathername
+,t_patient.patient_mother_firstname
+ || ' ' || t_patient.patient_mother_lastname as mothername
+,t_patient_personal_disease.patient_personal_disease_description as personaldisease
+,t_patient.patient_update_date_time as date
+,t_patient_payment.patient_payment_card_number as plancode
+,t_patient_payment.patient_payment_card_issue_date as startplan
+,t_patient_payment.patient_payment_card_expire_date as expplan
+,f_patient_relation.patient_relation_description as relation
+--,case when b_employee.b_employee_id is null then '' else t_person.person_firstname || ' ' || t_person.person_lastname end as staff_record
+,case when b_employee.b_employee_id is null then t_person.person_firstname || ' ' || t_person.person_lastname 
+else b1.employee_firstname || ' ' || b1.employee_lastname end as staff_record
+--,b_employee.employee_firstname ||' '|| b_employee.employee_lastname as staff_record
+--,t_person.person_firstname ||' '|| t_person.person_lastname as staff_record
+,t_patient.patient_record_date_time as date_reccord
+,t_patient.patient_patient_mobile_phone as mobile
+,t_patient.patient_contact_mobile_phone as mobile_contact
+,t_patient.patient_contact_phone_number as phone_contact
+,f_patient_blood_group.patient_blood_group_description as blood_group
+,f_sex.sex_description as sex
+,case when t_patient.deny_allergy = '1' then '/'  else '' end as allergy
+,case when t_patient.deny_allergy = '3' then '/'  else '' end as allergy2
+,case when t_patient.deny_allergy = '2' then '/' 
+when t_patient.deny_allergy not in ('1','3') then '/' else ' ' end as allergy1
+
+
+from t_patient 
+
+left join f_patient_marriage_status on f_patient_marriage_status.f_patient_marriage_status_id = t_patient.f_patient_marriage_status_id
+left join f_patient_occupation on f_patient_occupation.f_patient_occupation_id = t_patient.f_patient_occupation_id
+left join f_patient_religion on f_patient_religion.f_patient_religion_id = t_patient.f_patient_religion_id
+left join f_patient_nation on f_patient_nation.f_patient_nation_id = t_patient.f_patient_nation_id
+left join (select * from f_patient_nation) as race on race.f_patient_nation_id = t_patient.f_patient_race_id
+left join t_patient_payment on t_patient_payment.t_patient_id = t_patient.t_patient_id 
+left join b_contract_plans on b_contract_plans.b_contract_plans_id = t_patient_payment.b_contact_plans_id
+left join f_patient_prefix on t_patient.f_patient_prefix_id = f_patient_prefix.f_patient_prefix_id
+left join (select * from f_address) as changwat on changwat.f_address_id = t_patient.patient_changwat
+left join (select * from f_address) as amphur on amphur.f_address_id = t_patient.patient_amphur
+left join (select * from f_address) as tambon on tambon.f_address_id = t_patient.patient_tambon
+left join (select * from f_address) as changwat_ct on changwat_ct.f_address_id = patient_contact_changwat
+left join (select * from f_address) as amphur_ct on amphur_ct.f_address_id = t_patient.patient_contact_amphur
+left join (select * from f_address) as tambon_ct on tambon_ct.f_address_id = patient_contact_tambon
+left join t_patient_personal_disease on t_patient_personal_disease.t_patient_id = t_patient.t_patient_id
+left join f_patient_relation on f_patient_relation.f_patient_relation_id = t_patient.f_patient_relation_id
+left join b_employee on t_patient.patient_staff_record = b_employee.b_employee_id --and b_employee.employee_active='1'
+left join b_employee as b1 on t_patient.patient_staff_modify = b1.b_employee_id --and b_employee.employee_active='1'
+left join t_person on t_person.t_person_id = b_employee.t_person_id
+left join f_patient_blood_group on t_patient.f_patient_blood_group_id = f_patient_blood_group.f_patient_blood_group_id
+left join f_sex on t_patient.f_sex_id = f_sex.f_sex_id
+
+where t_patient.t_patient_id = $P{patient_id}
+--t_patient.patient_hn = '000009728']]></queryString>
+
+	<field name="birthdate" class="java.lang.String"/>
+	<field name="year_age" class="java.lang.String"/>
+	<field name="mount_age" class="java.lang.String"/>
+	<field name="day_age" class="java.lang.String"/>
+	<field name="marry" class="java.lang.String"/>
+	<field name="occupation" class="java.lang.String"/>
+	<field name="religion" class="java.lang.String"/>
+	<field name="nation" class="java.lang.String"/>
+	<field name="race" class="java.lang.String"/>
+	<field name="name" class="java.lang.String"/>
+	<field name="plan" class="java.lang.String"/>
+	<field name="hn" class="java.lang.String"/>
+	<field name="address" class="java.lang.String"/>
+	<field name="telephonenumber" class="java.lang.String"/>
+	<field name="teller" class="java.lang.String"/>
+	<field name="pid" class="java.lang.String"/>
+	<field name="telleraddress" class="java.lang.String"/>
+	<field name="fathername" class="java.lang.String"/>
+	<field name="mothername" class="java.lang.String"/>
+	<field name="personaldisease" class="java.lang.String"/>
+	<field name="date" class="java.lang.String"/>
+	<field name="plancode" class="java.lang.String"/>
+	<field name="startplan" class="java.lang.String"/>
+	<field name="expplan" class="java.lang.String"/>
+	<field name="relation" class="java.lang.String"/>
+	<field name="staff_record" class="java.lang.String"/>
+	<field name="date_reccord" class="java.lang.String"/>
+	<field name="mobile" class="java.lang.String"/>
+	<field name="mobile_contact" class="java.lang.String"/>
+	<field name="phone_contact" class="java.lang.String"/>
+	<field name="blood_group" class="java.lang.String"/>
+	<field name="sex" class="java.lang.String"/>
+	<field name="allergy" class="java.lang.String"/>
+	<field name="allergy2" class="java.lang.String"/>
+	<field name="allergy1" class="java.lang.String"/>
+
+		<background>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</background>
+		<title>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</title>
+		<pageHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageHeader>
+		<columnHeader>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnHeader>
+		<detail>
+			<band height="560"  isSplitAllowed="true" >
+				<staticText>
+					<reportElement
+						x="159"
+						y="38"
+						width="402"
+						height="43"
+						key="staticText-3"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="24" isBold="true"/>
+					</textElement>
+				<text><![CDATA[โรงพยาบาลแม่วงก์ จ.นครสวรรค์ เวชระเบียนผู้ป่วยนอก]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="159"
+						y="62"
+						width="401"
+						height="25"
+						key="staticText-4"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="18" isBold="true"/>
+					</textElement>
+				<text><![CDATA[25 ม.9 ต.แม่วงก์ อ.แม่วงก์ จ.นครสวรรค์]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="106"
+						y="105"
+						width="24"
+						height="23"
+						key="staticText-5"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="20" isBold="true"/>
+					</textElement>
+				<text><![CDATA[HN]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="136"
+						y="105"
+						width="114"
+						height="31"
+						key="textField-10"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="20" isBold="true"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{hn}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="41"
+						y="139"
+						width="24"
+						height="24"
+						key="staticText-6"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[ชื่อ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="65"
+						y="139"
+						width="252"
+						height="24"
+						key="textField-11"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{name}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="320"
+						y="140"
+						width="51"
+						height="24"
+						key="staticText-7"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[เลขบัตร]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="372"
+						y="140"
+						width="194"
+						height="24"
+						key="textField-12"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{pid}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="41"
+						y="164"
+						width="40"
+						height="22"
+						key="staticText-8"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[เกิดวันที่]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="248"
+						y="164"
+						width="134"
+						height="22"
+						key="textField-13"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{year_age}+"ปี" + $F{mount_age}+"เดือน" + $F{day_age}+"วัน"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="84"
+						y="164"
+						width="131"
+						height="22"
+						key="textField-14"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[com.hospital_os.utility.DateUtil.getDateToString(
+com.hospital_os.utility.DateUtil.getDateFromText(
+$F{birthdate}),false)]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="221"
+						y="164"
+						width="24"
+						height="22"
+						key="staticText-9"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[อายุ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement
+						x="391"
+						y="164"
+						width="24"
+						height="22"
+						key="staticText-10"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[เพศ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="415"
+						y="164"
+						width="50"
+						height="22"
+						key="textField-15"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{sex}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="470"
+						y="164"
+						width="46"
+						height="22"
+						key="staticText-11"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[หมู่เลือด]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="516"
+						y="164"
+						width="50"
+						height="22"
+						key="textField-16"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{blood_group}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="41"
+						y="185"
+						width="40"
+						height="22"
+						key="staticText-12"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[สัญชาติ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="84"
+						y="185"
+						width="80"
+						height="22"
+						key="textField-17"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{race}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="169"
+						y="185"
+						width="43"
+						height="22"
+						key="staticText-13"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[เชื้อชาติ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="215"
+						y="185"
+						width="84"
+						height="22"
+						key="textField-18"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{nation}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="309"
+						y="185"
+						width="38"
+						height="22"
+						key="staticText-14"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[ศาสนา]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="347"
+						y="185"
+						width="88"
+						height="22"
+						key="textField-19"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{religion}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="442"
+						y="185"
+						width="57"
+						height="22"
+						key="staticText-15"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[สถานภาพ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="500"
+						y="185"
+						width="66"
+						height="22"
+						key="textField-20"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{marry}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="41"
+						y="207"
+						width="40"
+						height="22"
+						key="staticText-16"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[อาชีพ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="70"
+						y="207"
+						width="145"
+						height="22"
+						key="textField-21"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{occupation}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="214"
+						y="207"
+						width="43"
+						height="22"
+						key="staticText-17"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[เบอร์โทร]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="253"
+						y="207"
+						width="153"
+						height="22"
+						key="textField-22"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{telephonenumber}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="406"
+						y="207"
+						width="38"
+						height="22"
+						key="staticText-18"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[มือถือ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="444"
+						y="207"
+						width="122"
+						height="22"
+						key="textField-23"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{mobile}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="41"
+						y="229"
+						width="29"
+						height="22"
+						key="staticText-19"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[ที่อยู่]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="70"
+						y="229"
+						width="340"
+						height="22"
+						key="textField-24"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{address}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="41"
+						y="251"
+						width="29"
+						height="22"
+						key="staticText-20"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[บิดา]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="70"
+						y="251"
+						width="228"
+						height="22"
+						key="textField-25"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{fathername}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="307"
+						y="251"
+						width="39"
+						height="22"
+						key="staticText-21"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[มารดา]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="345"
+						y="251"
+						width="221"
+						height="22"
+						key="textField-26"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{mothername}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="41"
+						y="291"
+						width="52"
+						height="24"
+						key="staticText-22"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[ชื่อผู้ติดต่อ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="93"
+						y="291"
+						width="206"
+						height="24"
+						key="textField-27"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{teller}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="307"
+						y="291"
+						width="48"
+						height="24"
+						key="staticText-23"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[เกี่ยวข้อง]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="355"
+						y="291"
+						width="69"
+						height="24"
+						key="textField-28"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{relation}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="41"
+						y="315"
+						width="45"
+						height="22"
+						key="staticText-24"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[เบอร์โทร]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="87"
+						y="315"
+						width="158"
+						height="22"
+						key="textField-29"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{phone_contact}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="254"
+						y="315"
+						width="38"
+						height="22"
+						key="staticText-25"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[มือถือ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="292"
+						y="315"
+						width="129"
+						height="22"
+						key="textField-30"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{mobile_contact}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="41"
+						y="337"
+						width="29"
+						height="22"
+						key="staticText-26"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[ที่อยู่]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="70"
+						y="337"
+						width="340"
+						height="22"
+						key="textField-31"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{telleraddress}]]></textFieldExpression>
+				</textField>
+				<line direction="TopDown">
+					<reportElement
+						x="41"
+						y="373"
+						width="524"
+						height="0"
+						key="line-1"/>
+					<graphicElement stretchType="NoStretch" pen="Dotted"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="80"
+						y="384"
+						width="29"
+						height="19"
+						key="staticText-27"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" size="16"/>
+					</textElement>
+				<text><![CDATA[ไม่แพ้]]></text>
+				</staticText>
+				<rectangle>
+					<reportElement
+						x="107"
+						y="386"
+						width="15"
+						height="13"
+						key="rectangle-1"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<staticText>
+					<reportElement
+						x="135"
+						y="384"
+						width="20"
+						height="19"
+						key="staticText-28"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" size="16"/>
+					</textElement>
+				<text><![CDATA[แพ้]]></text>
+				</staticText>
+				<rectangle>
+					<reportElement
+						x="152"
+						y="386"
+						width="15"
+						height="13"
+						key="rectangle-2"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<staticText>
+					<reportElement
+						x="46"
+						y="384"
+						width="35"
+						height="22"
+						key="staticText-29"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[แพ้ยา]]></text>
+				</staticText>
+				<line direction="TopDown">
+					<reportElement
+						x="41"
+						y="414"
+						width="524"
+						height="0"
+						key="line-2"/>
+					<graphicElement stretchType="NoStretch" pen="Dotted"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="41"
+						y="427"
+						width="70"
+						height="22"
+						key="staticText-30"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[สิทธิการรักษา]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="111"
+						y="427"
+						width="324"
+						height="22"
+						key="textField-32"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{plan}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="439"
+						y="427"
+						width="38"
+						height="22"
+						key="staticText-31"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[เลขที่]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="470"
+						y="427"
+						width="95"
+						height="22"
+						key="textField-33"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{plancode}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="41"
+						y="449"
+						width="60"
+						height="22"
+						key="staticText-32"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[วันที่ทำบัตร]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="100"
+						y="449"
+						width="120"
+						height="22"
+						key="textField-34"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[com.hospital_os.utility.DateUtil.getDateToString(
+com.hospital_os.utility.DateUtil.getDateFromText(
+$F{startplan}),false)]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement
+						x="227"
+						y="449"
+						width="64"
+						height="22"
+						key="staticText-33"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica-Bold" size="16" isBold="true"/>
+					</textElement>
+				<text><![CDATA[วันหมดอายุ]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="291"
+						y="449"
+						width="196"
+						height="22"
+						key="textField-35"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" pdfFontName="Helvetica" size="16" isBold="false"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[com.hospital_os.utility.DateUtil.getDateToString(
+com.hospital_os.utility.DateUtil.getDateFromText(
+$F{expplan}),false)]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="true" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="259"
+						y="491"
+						width="307"
+						height="18"
+						key="textField-36"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement textAlignment="Right">
+						<font fontName="TH SarabunPSK" size="12"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["ผู้บันทึก  "+$F{staff_record}+"  วันที่ "+com.hospital_os.utility.DateUtil.getDateToString(
+com.hospital_os.utility.DateUtil.getDateFromText(
+$F{date_reccord}.substring(0,10)
+),false)]]></textFieldExpression>
+				</textField>
+				<image  evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="65"
+						y="19"
+						width="84"
+						height="80"
+						key="image-1"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<graphicElement stretchType="NoStretch"/>
+					<imageExpression class="java.lang.String"><![CDATA["C:\\Program Files (x86)\\HospitalOS\\Hos3.9\\hprinting\\logomw1.jpg"]]></imageExpression>
+				</image>
+				<line direction="TopDown">
+					<reportElement
+						x="42"
+						y="283"
+						width="524"
+						height="0"
+						key="line-3"/>
+					<graphicElement stretchType="NoStretch" pen="Dotted"/>
+				</line>
+				<staticText>
+					<reportElement
+						x="181"
+						y="384"
+						width="43"
+						height="19"
+						key="staticText-34"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" size="16"/>
+					</textElement>
+				<text><![CDATA[ไม่ทราบ]]></text>
+				</staticText>
+				<rectangle>
+					<reportElement
+						x="219"
+						y="386"
+						width="15"
+						height="13"
+						key="rectangle-3"/>
+					<graphicElement stretchType="NoStretch"/>
+				</rectangle>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="223"
+						y="366"
+						width="43"
+						height="41"
+						key="textField-38"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" size="36"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{allergy1}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="154"
+						y="366"
+						width="43"
+						height="41"
+						key="textField-39"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" size="36"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{allergy2}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="108"
+						y="366"
+						width="43"
+						height="41"
+						key="textField-40"/>
+					<box topBorder="None" topBorderColor="#000000" leftBorder="None" leftBorderColor="#000000" rightBorder="None" rightBorderColor="#000000" bottomBorder="None" bottomBorderColor="#000000"/>
+					<textElement>
+						<font fontName="TH SarabunPSK" size="36"/>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$F{allergy}]]></textFieldExpression>
+				</textField>
+			</band>
+		</detail>
+		<columnFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="0"  isSplitAllowed="true" >
+			</band>
+		</summary>
+</jasperReport>
